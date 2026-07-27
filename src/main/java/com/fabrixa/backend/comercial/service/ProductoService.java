@@ -50,8 +50,15 @@ public class ProductoService {
         repository.save(producto);
     }
 
+
+    private Producto obtenerOFallar(Long id) {
+        return repository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Producto no encontrado"));
+    }
+
     private void aplicarDatos(Producto producto, Request request) {
         producto.setNombre(request.nombre());
+        producto.setTipo(request.tipo());
         producto.setCodigoBarra(request.codigoBarra());
         producto.setRnpa(request.rnpa());
         producto.setValorNutricional(request.valorNutricional());
@@ -59,14 +66,9 @@ public class ProductoService {
         producto.setCategoria(request.categoria());
     }
 
-    private Producto obtenerOFallar(Long id) {
-        return repository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Producto no encontrado"));
-    }
-
     private Response aResponse(Producto p) {
         return new Response(
-                p.getId(), p.getNombre(), p.getCodigoBarra(), p.getRnpa(),
+                p.getId(), p.getNombre(), p.getTipo(), p.getCodigoBarra(), p.getRnpa(),
                 p.getValorNutricional(), p.getUnidadMedida(), p.getCategoria(), p.isActivo()
         );
     }

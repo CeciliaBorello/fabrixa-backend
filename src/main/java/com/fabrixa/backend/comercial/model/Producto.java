@@ -17,6 +17,10 @@ public class Producto {
     @Column(nullable = false)
     private String nombre;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private TipoProducto tipo = TipoProducto.TERMINADO;
+
     @Column(name = "codigo_barra")
     private String codigoBarra;
 
@@ -25,8 +29,9 @@ public class Producto {
     @Column(name = "valor_nutricional", columnDefinition = "TEXT")
     private String valorNutricional;
 
-    @Column(name = "unidad_medida")
-    private String unidadMedida;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "unidad_medida", nullable = false)
+    private UnidadMedida unidadMedida = UnidadMedida.KG;
 
     private String categoria;
 
