@@ -24,6 +24,7 @@ public class ProductoDTO {
             String valorNutricional,
             UnidadMedida unidadMedida,
             String categoria,
+            java.math.BigDecimal precioActual,
             boolean activo
     ) {}
 }

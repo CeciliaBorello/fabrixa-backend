@@ -37,4 +37,7 @@ public class Producto {
 
     @Column(nullable = false)
     private boolean activo = true;
+
+    @Column(name = "precio_actual")
+    private java.math.BigDecimal precioActual;
 }

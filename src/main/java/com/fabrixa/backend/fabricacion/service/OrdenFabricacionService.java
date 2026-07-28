@@ -88,10 +88,10 @@ public class OrdenFabricacionService {
             throw new IllegalArgumentException("Solo se puede iniciar producción de una orden PLANIFICADA");
         }
 
+        java.math.BigDecimal costoAcumulado = java.math.BigDecimal.ZERO;
+
         for (var insumoFormula : orden.getFormula().getInsumos()) {
             var cantidadEnUnidadReceta = insumoFormula.getCantidadNecesaria().multiply(orden.getCantidadPlanificada());
-
-            // convertimos de la unidad en que está expresada la receta a la unidad en que se lleva el stock del insumo
             var cantidadADescontar = ConversorUnidades.convertir(
                     cantidadEnUnidadReceta,
                     insumoFormula.getUnidadMedida(),
@@ -106,18 +106,22 @@ public class OrdenFabricacionService {
                     orden.getId(),
                     "Consumo de insumo para orden #" + orden.getId()
             );
+
+            var precioInsumo = insumoFormula.getInsumo().getPrecioActual();
+            if (precioInsumo != null) {
+                costoAcumulado = costoAcumulado.add(cantidadADescontar.multiply(precioInsumo));
+            }
+            // si el insumo no tiene precio cargado, simplemente no suma al costo — se puede
+            // completar el precio después y no bloqueamos la producción por eso
         }
 
         orden.setEstado(EstadoOrdenFabricacion.EN_PROCESO);
         orden.setFechaInicio(LocalDateTime.now());
+        orden.setCostoTotalInsumos(costoAcumulado);
 
         return aResponse(repository.save(orden));
     }
 
-    /**
-     * Finaliza la orden: ingresa al stock la cantidad realmente producida (puede diferir de la
-     * planificada) y genera el lote correspondiente.
-     */
     @Transactional
     public Response finalizar(Long id, FinalizarRequest request) {
         OrdenFabricacion orden = obtenerOFallar(id);
@@ -129,6 +133,12 @@ public class OrdenFabricacionService {
         orden.setCantidadProducida(request.cantidadProducida());
         orden.setEstado(EstadoOrdenFabricacion.FINALIZADA);
         orden.setFechaFin(LocalDateTime.now());
+
+        if (orden.getCostoTotalInsumos() != null && request.cantidadProducida().compareTo(java.math.BigDecimal.ZERO) > 0) {
+            orden.setCostoUnitarioProducido(
+                    orden.getCostoTotalInsumos().divide(request.cantidadProducida(), 4, java.math.RoundingMode.HALF_UP)
+            );
+        }
 
         LoteProduccion lote = new LoteProduccion();
         lote.setOrdenFabricacion(orden);
@@ -174,7 +184,8 @@ public class OrdenFabricacionService {
         return new Response(
                 o.getId(), o.getProducto().getId(), o.getProducto().getNombre(),
                 o.getFormula().getId(), o.getCantidadPlanificada(), o.getCantidadProducida(),
-                o.getEstado(), o.getFechaInicio(), o.getFechaFin(), o.getUsuario().getNombre()
+                o.getEstado(), o.getFechaInicio(), o.getFechaFin(), o.getUsuario().getNombre(),
+                o.getCostoTotalInsumos(), o.getCostoUnitarioProducido()
         );
     }
 }

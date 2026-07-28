@@ -51,4 +51,10 @@ public class OrdenFabricacion {
 
     @OneToMany(mappedBy = "ordenFabricacion", cascade = CascadeType.ALL)
     private List<LoteProduccion> lotes = new ArrayList<>();
+
+    @Column(name = "costo_total_insumos")
+    private java.math.BigDecimal costoTotalInsumos;
+
+    @Column(name = "costo_unitario_producido")
+    private java.math.BigDecimal costoUnitarioProducido;
 }

@@ -69,7 +69,8 @@ public class ProductoService {
     private Response aResponse(Producto p) {
         return new Response(
                 p.getId(), p.getNombre(), p.getTipo(), p.getCodigoBarra(), p.getRnpa(),
-                p.getValorNutricional(), p.getUnidadMedida(), p.getCategoria(), p.isActivo()
+                p.getValorNutricional(), p.getUnidadMedida(), p.getCategoria(),
+                p.getPrecioActual(), p.isActivo()
         );
     }
 }
