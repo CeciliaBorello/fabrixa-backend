@@ -13,6 +13,8 @@ import com.fabrixa.backend.usuarios.model.Usuario;
 import com.fabrixa.backend.usuarios.repository.UsuarioRepository;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -37,6 +39,10 @@ public class PedidoService {
 
     public List<Response> listar() {
         return pedidoRepository.findAll().stream().map(this::aResponse).toList();
+    }
+
+    public Page<Response> listarPaginado(Pageable pageable) {
+        return pedidoRepository.findAll(pageable).map(this::aResponse);
     }
 
     public Response buscarPorId(Long id) {

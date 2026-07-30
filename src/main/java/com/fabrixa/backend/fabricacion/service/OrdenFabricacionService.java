@@ -9,14 +9,19 @@ import com.fabrixa.backend.fabricacion.model.LoteProduccion;
 import com.fabrixa.backend.fabricacion.model.OrdenFabricacion;
 import com.fabrixa.backend.fabricacion.repository.FormulaProductoRepository;
 import com.fabrixa.backend.fabricacion.repository.OrdenFabricacionRepository;
+import com.fabrixa.backend.pedidos.dto.PedidoDTO;
 import com.fabrixa.backend.stock.model.TipoMovimientoStock;
 import com.fabrixa.backend.stock.service.StockService;
 import com.fabrixa.backend.usuarios.model.Usuario;
 import com.fabrixa.backend.usuarios.repository.UsuarioRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import com.fabrixa.backend.comercial.model.ConversorUnidades;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -47,6 +52,9 @@ public class OrdenFabricacionService {
         return repository.findAll().stream().map(this::aResponse).toList();
     }
 
+    public Page<Response> listarPaginado(Pageable pageable) {
+        return repository.findAll(pageable).map(this::aResponse);
+    }
     public Response buscarPorId(Long id) {
         return aResponse(obtenerOFallar(id));
     }

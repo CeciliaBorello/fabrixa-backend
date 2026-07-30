@@ -5,6 +5,8 @@ import com.fabrixa.backend.pedidos.dto.PedidoDTO.Response;
 import com.fabrixa.backend.pedidos.service.PedidoService;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 
 import java.util.List;
 
@@ -46,5 +48,12 @@ public class PedidoController {
     @PutMapping("/{id}/cancelar")
     public Response cancelar(@PathVariable Long id) {
         return service.cancelar(id);
+    }
+
+    @GetMapping("/pagina")
+    public Page<Response> listarPaginado(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        return service.listarPaginado(PageRequest.of(page, size));
     }
 }

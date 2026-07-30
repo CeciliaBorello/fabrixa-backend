@@ -8,6 +8,8 @@ import com.fabrixa.backend.usuarios.repository.RolRepository;
 import com.fabrixa.backend.usuarios.repository.UsuarioRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 
@@ -93,5 +95,9 @@ public class UsuarioService {
 
     private UsuarioResponse aResponse(Usuario u) {
         return new UsuarioResponse(u.getId(), u.getNombre(), u.getEmail(), u.getRol().getNombre(), u.isActivo());
+    }
+
+    public Page<UsuarioResponse> listarPaginado(Pageable pageable) {
+        return usuarioRepository.findAll(pageable).map(this::aResponse);
     }
 }

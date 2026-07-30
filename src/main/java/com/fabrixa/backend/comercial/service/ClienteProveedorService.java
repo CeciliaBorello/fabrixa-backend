@@ -7,6 +7,8 @@ import com.fabrixa.backend.comercial.model.ListaPrecio;
 import com.fabrixa.backend.comercial.repository.ClienteProveedorRepository;
 import com.fabrixa.backend.comercial.repository.ListaPrecioRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 
@@ -24,6 +26,10 @@ public class ClienteProveedorService {
 
     public List<Response> listar() {
         return repository.findAll().stream().map(this::aResponse).toList();
+    }
+
+    public Page<Response> listarPaginado(Pageable pageable) {
+        return repository.findAll(pageable).map(this::aResponse);
     }
 
     public Response buscarPorId(Long id) {

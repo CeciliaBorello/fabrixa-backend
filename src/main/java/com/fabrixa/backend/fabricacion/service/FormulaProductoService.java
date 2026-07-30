@@ -7,6 +7,8 @@ import com.fabrixa.backend.fabricacion.model.FormulaInsumo;
 import com.fabrixa.backend.fabricacion.model.FormulaProducto;
 import com.fabrixa.backend.fabricacion.repository.FormulaProductoRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 
@@ -23,6 +25,10 @@ public class FormulaProductoService {
 
     public List<Response> listar() {
         return repository.findAll().stream().map(this::aResponse).toList();
+    }
+
+    public Page<Response> listarPaginado(Pageable pageable) {
+        return repository.findAll(pageable).map(this::aResponse);
     }
 
     public List<Response> listarPorProducto(Long productoTerminadoId) {

@@ -3,8 +3,11 @@ package com.fabrixa.backend.comercial.service;
 import com.fabrixa.backend.comercial.dto.ProductoDTO.Request;
 import com.fabrixa.backend.comercial.dto.ProductoDTO.Response;
 import com.fabrixa.backend.comercial.model.Producto;
+import com.fabrixa.backend.comercial.model.TipoProducto;
 import com.fabrixa.backend.comercial.repository.ProductoRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 
@@ -19,6 +22,14 @@ public class ProductoService {
 
     public List<Response> listar() {
         return repository.findAll().stream().map(this::aResponse).toList();
+    }
+
+    public Page<Response> listarPaginado(Pageable pageable) {
+        return repository.findAll(pageable).map(this::aResponse);
+    }
+
+    public Page<Response> listarPaginadoPorTipos(List<TipoProducto> tipos, Pageable pageable) {
+        return repository.findByActivoTrueAndTipoIn(tipos, pageable).map(this::aResponse);
     }
 
     public Response buscarPorId(Long id) {

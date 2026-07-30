@@ -4,6 +4,8 @@ import com.fabrixa.backend.fabricacion.dto.FormulaDTO.Request;
 import com.fabrixa.backend.fabricacion.dto.FormulaDTO.Response;
 import com.fabrixa.backend.fabricacion.service.FormulaProductoService;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 
 import java.util.List;
 
@@ -40,5 +42,12 @@ public class FormulaProductoController {
     @PutMapping("/{id}/reactivar")
     public void reactivar(@PathVariable Long id) {
         service.reactivar(id);
+    }
+
+    @GetMapping("/pagina")
+    public Page<Response> listarPaginado(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        return service.listarPaginado(PageRequest.of(page, size));
     }
 }
