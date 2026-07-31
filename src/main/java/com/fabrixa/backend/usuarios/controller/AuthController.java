@@ -3,8 +3,12 @@ package com.fabrixa.backend.usuarios.controller;
 import com.fabrixa.backend.usuarios.model.Usuario;
 import com.fabrixa.backend.usuarios.repository.UsuarioRepository;
 import com.fabrixa.backend.usuarios.security.JwtService;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -27,14 +31,18 @@ public class AuthController {
     public record LoginResponse(String token, String nombre, String rol) {}
 
     @PostMapping("/login")
-    public LoginResponse login(@RequestBody LoginRequest request) {
-        authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(request.email(), request.password())
-        );
+    public ResponseEntity<?> login(@RequestBody LoginRequest request) {
+        try {
+            authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(request.email(), request.password())
+            );
+        } catch (AuthenticationException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Email o contraseña incorrectos");
+        }
 
         Usuario usuario = usuarioRepository.findByEmail(request.email()).orElseThrow();
         String token = jwtService.generarToken(usuario.getEmail(), usuario.getRol().getNombre());
 
-        return new LoginResponse(token, usuario.getNombre(), usuario.getRol().getNombre());
+        return ResponseEntity.ok(new LoginResponse(token, usuario.getNombre(), usuario.getRol().getNombre()));
     }
 }
