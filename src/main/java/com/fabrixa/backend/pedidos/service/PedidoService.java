@@ -49,6 +49,10 @@ public class PedidoService {
         return aResponse(obtenerOFallar(id));
     }
 
+    public Page<Response> buscar(boolean soloCancelados, String busqueda, Pageable pageable) {
+        return pedidoRepository.buscar(soloCancelados, busqueda, pageable).map(this::aResponse);
+    }
+
     public Response crear(Request request, Authentication auth) {
         ClienteProveedor cliente = clienteRepository.findById(request.clienteId())
                 .orElseThrow(() -> new IllegalArgumentException("Cliente no encontrado"));

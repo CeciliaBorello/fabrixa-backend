@@ -3,6 +3,8 @@ package com.fabrixa.backend.comercial.model;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.UpdateTimestamp;
+import java.time.LocalDateTime;
 
 import java.math.BigDecimal;
 
@@ -42,4 +44,8 @@ public class ClienteProveedor {
 
     @Column(nullable = false)
     private boolean activo = true;
+
+    @UpdateTimestamp
+    @Column(name = "fecha_modificacion")
+    private LocalDateTime fechaModificacion;
 }

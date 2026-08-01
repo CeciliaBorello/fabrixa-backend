@@ -3,6 +3,8 @@ package com.fabrixa.backend.comercial.model;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.UpdateTimestamp;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "productos")
@@ -40,4 +42,8 @@ public class Producto {
 
     @Column(name = "precio_actual")
     private java.math.BigDecimal precioActual;
+
+    @UpdateTimestamp
+    @Column(name = "fecha_modificacion")
+    private LocalDateTime fechaModificacion;
 }

@@ -36,6 +36,10 @@ public class ClienteProveedorService {
         return aResponse(obtenerOFallar(id));
     }
 
+    public Page<Response> buscar(boolean activo, String busqueda, Pageable pageable) {
+        return repository.buscar(activo, busqueda, pageable).map(this::aResponse);
+    }
+
     public Response crear(Request request) {
         if (repository.findByCuit(request.cuit()).isPresent()) {
             throw new IllegalArgumentException("Ya existe un cliente/proveedor con ese CUIT");

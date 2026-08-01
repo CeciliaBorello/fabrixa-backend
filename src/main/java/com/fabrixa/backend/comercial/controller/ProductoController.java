@@ -8,8 +8,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import java.util.List;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 
 
 @RestController
@@ -52,28 +51,22 @@ public class ProductoController {
         service.reactivar(id);
     }
 
-    /*@GetMapping("/pagina")
-    public Page<Response> listarPaginado(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) {
-        return service.listarPaginado(PageRequest.of(page, size));
-    }*/
-
     @GetMapping("/pagina")
     public Page<Response> listarPaginado(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "fechaModificacion") String sortBy,
+            @RequestParam(defaultValue = "desc") String sortDir,
+            @RequestParam(defaultValue = "true") boolean activo,
+            @RequestParam(defaultValue = "") String busqueda,
             @RequestParam(required = false) String grupo) {
 
         List<TipoProducto> tipos;
-        if ("terminados".equals(grupo)) {
-            tipos = List.of(TipoProducto.TERMINADO, TipoProducto.AMBOS);
-        } else if ("insumos".equals(grupo)) {
-            tipos = List.of(TipoProducto.INSUMO, TipoProducto.AMBOS);
-        } else {
-            tipos = List.of(TipoProducto.values());
-        }
+        if ("terminados".equals(grupo)) tipos = List.of(TipoProducto.TERMINADO, TipoProducto.AMBOS);
+        else if ("insumos".equals(grupo)) tipos = List.of(TipoProducto.INSUMO, TipoProducto.AMBOS);
+        else tipos = List.of(TipoProducto.values());
 
-        return service.listarPaginadoPorTipos(tipos, PageRequest.of(page, size));
+        Sort sort = Sort.by(Sort.Direction.fromString(sortDir), sortBy);
+        return service.buscar(activo, tipos, busqueda, PageRequest.of(page, size, sort));
     }
 }

@@ -36,6 +36,10 @@ public class ProductoService {
         return aResponse(obtenerOFallar(id));
     }
 
+    public Page<Response> buscar(boolean activo, List<TipoProducto> tipos, String busqueda, Pageable pageable) {
+        return repository.buscar(activo, tipos, busqueda, pageable).map(this::aResponse);
+    }
+
     public Response crear(Request request) {
         Producto producto = new Producto();
         aplicarDatos(producto, request);

@@ -3,6 +3,8 @@ package com.fabrixa.backend.usuarios.model;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.UpdateTimestamp;
+import java.time.LocalDateTime;
 
 import java.time.LocalDateTime;
 
@@ -34,4 +36,8 @@ public class Usuario {
 
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
+
+    @UpdateTimestamp
+    @Column(name = "fecha_modificacion")
+    private LocalDateTime fechaModificacion;
 }

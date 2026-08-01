@@ -7,6 +7,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 
 import java.util.List;
 
@@ -53,8 +54,14 @@ public class UsuarioController {
 
     @GetMapping("/pagina")
     public Page<UsuarioResponse> listarPaginado(
-        @RequestParam(defaultValue = "0") int page,
-        @RequestParam(defaultValue = "10") int size) {
-            return usuarioService.listarPaginado(PageRequest.of(page, size));
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "fechaModificacion") String sortBy,
+            @RequestParam(defaultValue = "desc") String sortDir,
+            @RequestParam(defaultValue = "true") boolean activo,
+            @RequestParam(defaultValue = "") String busqueda) {
+
+        Sort sort = Sort.by(Sort.Direction.fromString(sortDir), sortBy);
+        return usuarioService.buscar(activo, busqueda, PageRequest.of(page, size, sort));
     }
 }

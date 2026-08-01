@@ -38,6 +38,10 @@ public class UsuarioService {
         return aResponse(obtenerOFallar(id));
     }
 
+    public Page<UsuarioResponse> buscar(boolean activo, String busqueda, Pageable pageable) {
+        return usuarioRepository.buscar(activo, busqueda, pageable).map(this::aResponse);
+    }
+
     public UsuarioResponse crear(UsuarioRequest request) {
         if (usuarioRepository.findByEmail(request.email()).isPresent()) {
             throw new IllegalArgumentException("Ya existe un usuario con ese email");
