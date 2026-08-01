@@ -7,6 +7,9 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import java.util.List;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 
 @RestController
 @RequestMapping("/api/ordenes-fabricacion")
@@ -51,7 +54,13 @@ public class OrdenFabricacionController {
     @GetMapping("/pagina")
     public Page<Response> listarPaginado(
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) {
-        return service.listarPaginado(PageRequest.of(page, size));
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "fechaModificacion") String sortBy,
+            @RequestParam(defaultValue = "desc") String sortDir,
+            @RequestParam(defaultValue = "false") boolean soloCanceladas,
+            @RequestParam(defaultValue = "") String busqueda) {
+
+        Sort sort = Sort.by(Sort.Direction.fromString(sortDir), sortBy);
+        return service.buscar(soloCanceladas, busqueda, PageRequest.of(page, size, sort));
     }
 }

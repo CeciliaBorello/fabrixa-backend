@@ -5,6 +5,7 @@ import com.fabrixa.backend.usuarios.model.Usuario;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.UpdateTimestamp;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -45,16 +46,20 @@ public class OrdenFabricacion {
     @Column(name = "fecha_fin")
     private LocalDateTime fechaFin;
 
+    @UpdateTimestamp
+    @Column(name = "fecha_modificacion")
+    private LocalDateTime fechaModificacion;
+
+    @Column(name = "costo_total_insumos")
+    private BigDecimal costoTotalInsumos;
+
+    @Column(name = "costo_unitario_producido")
+    private BigDecimal costoUnitarioProducido;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "usuario_id", nullable = false)
     private Usuario usuario;
 
     @OneToMany(mappedBy = "ordenFabricacion", cascade = CascadeType.ALL)
     private List<LoteProduccion> lotes = new ArrayList<>();
-
-    @Column(name = "costo_total_insumos")
-    private java.math.BigDecimal costoTotalInsumos;
-
-    @Column(name = "costo_unitario_producido")
-    private java.math.BigDecimal costoUnitarioProducido;
 }

@@ -1,0 +1,6 @@
+package com.fabrixa.backend.comercial.model;
+
+public enum CategoriaProducto {
+    MATERIA_PRIMA, ENVASES_Y_EMPAQUES, ADITIVOS_Y_CONSERVANTES,
+    LIMPIEZA_E_HIGIENE, REPUESTOS_Y_MANTENIMIENTO, PRODUCTO_PARA_VENTA, OTROS
+}

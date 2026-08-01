@@ -1,7 +1,10 @@
 package com.fabrixa.backend.comercial.dto;
 
+import com.fabrixa.backend.comercial.model.CategoriaProducto;
 import com.fabrixa.backend.comercial.model.TipoProducto;
 import com.fabrixa.backend.comercial.model.UnidadMedida;
+
+import java.math.BigDecimal;
 
 public class ProductoDTO {
 
@@ -12,19 +15,15 @@ public class ProductoDTO {
             String rnpa,
             String valorNutricional,
             UnidadMedida unidadMedida,
-            String categoria
+            CategoriaProducto categoria,
+            Long productoBaseId,
+            String presentacion
     ) {}
 
     public record Response(
-            Long id,
-            String nombre,
-            TipoProducto tipo,
-            String codigoBarra,
-            String rnpa,
-            String valorNutricional,
-            UnidadMedida unidadMedida,
-            String categoria,
-            java.math.BigDecimal precioActual,
-            boolean activo
+            Long id, String nombre, TipoProducto tipo, String codigoBarra, String rnpa,
+            String valorNutricional, UnidadMedida unidadMedida, CategoriaProducto categoria,
+            BigDecimal precioActual, boolean activo,
+            String presentacion // <-- el campo nuevo que falta pasar
     ) {}
 }

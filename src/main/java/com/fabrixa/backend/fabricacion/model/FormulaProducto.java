@@ -4,7 +4,9 @@ import com.fabrixa.backend.comercial.model.Producto;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.UpdateTimestamp;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -30,6 +32,10 @@ public class FormulaProducto {
 
     @Column(nullable = false)
     private boolean activo = true;
+
+    @UpdateTimestamp
+    @Column(name = "fecha_modificacion")
+    private LocalDateTime fechaModificacion;
 
     @OneToMany(mappedBy = "formula", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<FormulaInsumo> insumos = new ArrayList<>();

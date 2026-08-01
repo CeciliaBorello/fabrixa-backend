@@ -41,6 +41,9 @@ public class ProductoService {
     }
 
     public Response crear(Request request) {
+        if (repository.existsByNombreIgnoreCase(request.nombre())) {
+            throw new IllegalArgumentException("Ya existe un producto con ese nombre");
+        }
         Producto producto = new Producto();
         aplicarDatos(producto, request);
         producto.setActivo(true);
@@ -49,6 +52,9 @@ public class ProductoService {
 
     public Response actualizar(Long id, Request request) {
         Producto producto = obtenerOFallar(id);
+        if (repository.existsByNombreIgnoreCaseAndIdNot(request.nombre(), id)) {
+            throw new IllegalArgumentException("Ya existe otro producto con ese nombre");
+        }
         aplicarDatos(producto, request);
         return aResponse(repository.save(producto));
     }
@@ -85,7 +91,14 @@ public class ProductoService {
         return new Response(
                 p.getId(), p.getNombre(), p.getTipo(), p.getCodigoBarra(), p.getRnpa(),
                 p.getValorNutricional(), p.getUnidadMedida(), p.getCategoria(),
-                p.getPrecioActual(), p.isActivo()
+                p.getPrecioActual(), p.isActivo(),
+                p.getPresentacion()
         );
+    }
+
+    public List<Response> listarProductosBase() {
+        return repository.findByProductoBaseIsNullAndActivoTrueOrderByNombre().stream()
+                .map(this::aResponse)
+                .toList();
     }
 }

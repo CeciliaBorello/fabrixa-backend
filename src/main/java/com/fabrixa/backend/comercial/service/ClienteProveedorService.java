@@ -6,6 +6,10 @@ import com.fabrixa.backend.comercial.model.ClienteProveedor;
 import com.fabrixa.backend.comercial.model.ListaPrecio;
 import com.fabrixa.backend.comercial.repository.ClienteProveedorRepository;
 import com.fabrixa.backend.comercial.repository.ListaPrecioRepository;
+import com.fabrixa.backend.entidades.model.Ciudad;
+import com.fabrixa.backend.entidades.model.Provincia;
+import com.fabrixa.backend.entidades.repository.CiudadRepository;
+import com.fabrixa.backend.entidades.repository.ProvinciaRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -17,11 +21,15 @@ public class ClienteProveedorService {
 
     private final ClienteProveedorRepository repository;
     private final ListaPrecioRepository listaPrecioRepository;
+    private final ProvinciaRepository provinciaRepository;
+    private final CiudadRepository ciudadRepository;
 
     public ClienteProveedorService(ClienteProveedorRepository repository,
-                                   ListaPrecioRepository listaPrecioRepository) {
+                                   ListaPrecioRepository listaPrecioRepository, ProvinciaRepository provinciaRepository, CiudadRepository ciudadRepository) {
         this.repository = repository;
         this.listaPrecioRepository = listaPrecioRepository;
+        this.provinciaRepository = provinciaRepository;
+        this.ciudadRepository = ciudadRepository;
     }
 
     public List<Response> listar() {
@@ -75,6 +83,23 @@ public class ClienteProveedorService {
         entidad.setRazonSocial(request.razonSocial());
         entidad.setCuit(request.cuit());
         entidad.setCondicionIva(request.condicionIva());
+
+        if (request.provinciaId() != null) {
+            Provincia provincia = provinciaRepository.findById(request.provinciaId())
+                    .orElseThrow(() -> new IllegalArgumentException("Provincia no encontrada"));
+            entidad.setProvincia(provincia);
+        } else {
+            entidad.setProvincia(null);
+        }
+
+        if (request.ciudadId() != null) {
+            Ciudad ciudad = ciudadRepository.findById(request.ciudadId())
+                    .orElseThrow(() -> new IllegalArgumentException("Ciudad no encontrada"));
+            entidad.setCiudad(ciudad);
+        } else {
+            entidad.setCiudad(null);
+        }
+
         entidad.setDireccion(request.direccion());
         entidad.setTelefono(request.telefono());
         entidad.setEmail(request.email());
@@ -95,17 +120,15 @@ public class ClienteProveedorService {
 
     private Response aResponse(ClienteProveedor c) {
         return new Response(
-                c.getId(),
-                c.getTipo(),
-                c.getRazonSocial(),
-                c.getCuit(),
-                c.getCondicionIva(),
+                c.getId(), c.getTipo(), c.getRazonSocial(), c.getCuit(), c.getCondicionIva(),
                 c.getDireccion(),
-                c.getTelefono(),
-                c.getEmail(),
+                c.getProvincia() != null ? c.getProvincia().getId() : null,
+                c.getProvincia() != null ? c.getProvincia().getNombre() : null,
+                c.getCiudad() != null ? c.getCiudad().getId() : null,
+                c.getCiudad() != null ? c.getCiudad().getNombre() : null,
+                c.getTelefono(), c.getEmail(),
                 c.getListaPrecio() != null ? c.getListaPrecio().getId() : null,
-                c.getSaldoCuentaCorriente(),
-                c.isActivo()
+                c.getSaldoCuentaCorriente(), c.isActivo()
         );
     }
 }

@@ -69,4 +69,9 @@ public class ProductoController {
         Sort sort = Sort.by(Sort.Direction.fromString(sortDir), sortBy);
         return service.buscar(activo, tipos, busqueda, PageRequest.of(page, size, sort));
     }
+
+    @GetMapping("/base")
+    public List<Response> listarProductosBase() {
+        return service.listarProductosBase();
+    }
 }

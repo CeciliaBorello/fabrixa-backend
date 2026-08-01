@@ -59,6 +59,10 @@ public class OrdenFabricacionService {
         return aResponse(obtenerOFallar(id));
     }
 
+    public Page<Response> buscar(boolean soloCanceladas, String busqueda, Pageable pageable) {
+        return repository.buscar(soloCanceladas, busqueda, pageable).map(this::aResponse);
+    }
+
     public Response crear(Request request, Authentication auth) {
         Producto producto = productoRepository.findById(request.productoId())
                 .orElseThrow(() -> new IllegalArgumentException("Producto no encontrado"));
@@ -192,8 +196,8 @@ public class OrdenFabricacionService {
         return new Response(
                 o.getId(), o.getProducto().getId(), o.getProducto().getNombre(),
                 o.getFormula().getId(), o.getCantidadPlanificada(), o.getCantidadProducida(),
-                o.getEstado(), o.getFechaInicio(), o.getFechaFin(), o.getUsuario().getNombre(),
-                o.getCostoTotalInsumos(), o.getCostoUnitarioProducido()
+                o.getEstado(), o.getFechaInicio(), o.getFechaFin(), o.getFechaModificacion(),
+                o.getUsuario().getNombre(), o.getCostoTotalInsumos(), o.getCostoUnitarioProducido()
         );
     }
 }

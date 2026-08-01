@@ -21,6 +21,7 @@ public class OrdenFabricacionDTO {
             EstadoOrdenFabricacion estado,
             LocalDateTime fechaInicio,
             LocalDateTime fechaFin,
+            LocalDateTime fechaModificacion,
             String usuarioNombre,
             BigDecimal costoTotalInsumos,
             BigDecimal costoUnitarioProducido

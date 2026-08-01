@@ -1,5 +1,6 @@
 package com.fabrixa.backend.comercial.dto;
 
+import com.fabrixa.backend.comercial.model.CondicionIva;
 import com.fabrixa.backend.comercial.model.TipoClienteProveedor;
 
 import java.math.BigDecimal;
@@ -10,8 +11,10 @@ public class ClienteProveedorDTO {
             TipoClienteProveedor tipo,
             String razonSocial,
             String cuit,
-            String condicionIva,
+            CondicionIva condicionIva,
             String direccion,
+            String provinciaId,
+            String ciudadId,
             String telefono,
             String email,
             Long listaPrecioId
@@ -22,8 +25,12 @@ public class ClienteProveedorDTO {
             TipoClienteProveedor tipo,
             String razonSocial,
             String cuit,
-            String condicionIva,
+            CondicionIva condicionIva,
             String direccion,
+            String provinciaId,
+            String provinciaNombre,
+            String ciudadId,
+            String ciudadNombre,
             String telefono,
             String email,
             Long listaPrecioId,

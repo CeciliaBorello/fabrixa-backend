@@ -35,7 +35,9 @@ public class Producto {
     @Column(name = "unidad_medida", nullable = false)
     private UnidadMedida unidadMedida = UnidadMedida.KG;
 
-    private String categoria;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "categoria")
+    private CategoriaProducto categoria;
 
     @Column(nullable = false)
     private boolean activo = true;
@@ -46,4 +48,11 @@ public class Producto {
     @UpdateTimestamp
     @Column(name = "fecha_modificacion")
     private LocalDateTime fechaModificacion;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "producto_base_id")
+    private Producto productoBase; // null si es el producto "raíz"; si tiene valor, es una presentación de otro
+
+    @Column(name = "presentacion")
+    private String presentacion; // ej: "200 g", "1 kg", "Pack x6"
 }

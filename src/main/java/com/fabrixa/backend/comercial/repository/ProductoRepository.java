@@ -20,4 +20,11 @@ public interface ProductoRepository extends JpaRepository<Producto, Long> {
             "OR LOWER(p.codigoBarra) LIKE LOWER(CONCAT('%', :busqueda, '%')))")
     Page<Producto> buscar(@Param("activo") boolean activo, @Param("tipos") List<TipoProducto> tipos,
                           @Param("busqueda") String busqueda, Pageable pageable);
+
+    boolean existsByNombreIgnoreCase(String nombre);
+    boolean existsByNombreIgnoreCaseAndIdNot(String nombre, Long id);
+
+    List<Producto> findByProductoBaseIsNullOrderByNombre(); // solo productos "raíz", para elegir como base
+    List<Producto> findByProductoBaseIsNullAndActivoTrueOrderByNombre();
+    List<Producto> findByProductoBaseIdOrderByPresentacion(Long productoBaseId);
 }

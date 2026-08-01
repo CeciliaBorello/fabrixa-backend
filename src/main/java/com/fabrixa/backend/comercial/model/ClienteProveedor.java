@@ -1,5 +1,7 @@
 package com.fabrixa.backend.comercial.model;
 
+import com.fabrixa.backend.entidades.model.Ciudad;
+import com.fabrixa.backend.entidades.model.Provincia;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -28,10 +30,21 @@ public class ClienteProveedor {
     @Column(nullable = false, unique = true)
     private String cuit;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "condicion_iva")
-    private String condicionIva;
+    private CondicionIva condicionIva;
 
-    private String direccion;
+    @Column
+    private String direccion; // calle, altura, depto — texto libre
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "provincia_id")
+    private Provincia provincia;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "ciudad_id")
+    private Ciudad ciudad;
+
     private String telefono;
     private String email;
 

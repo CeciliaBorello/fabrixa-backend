@@ -9,6 +9,8 @@ import com.fabrixa.backend.fabricacion.repository.FormulaProductoRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 
@@ -37,6 +39,10 @@ public class FormulaProductoService {
 
     public Response buscarPorId(Long id) {
         return aResponse(obtenerOFallar(id));
+    }
+
+    public Page<Response> buscar(boolean activo, String busqueda, Pageable pageable) {
+        return repository.buscar(activo, busqueda, pageable).map(this::aResponse);
     }
 
     public Response crear(Request request) {
