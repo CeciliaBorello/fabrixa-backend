@@ -63,4 +63,9 @@ public class OrdenFabricacionController {
         Sort sort = Sort.by(Sort.Direction.fromString(sortDir), sortBy);
         return service.buscar(soloCanceladas, busqueda, PageRequest.of(page, size, sort));
     }
+
+    @GetMapping("/por-producto/{productoId}")
+    public List<Response> historialPorProducto(@PathVariable Long productoId) {
+        return service.historialPorProducto(productoId);
+    }
 }

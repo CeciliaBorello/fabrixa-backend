@@ -200,4 +200,11 @@ public class OrdenFabricacionService {
                 o.getUsuario().getNombre(), o.getCostoTotalInsumos(), o.getCostoUnitarioProducido()
         );
     }
+
+    public List<Response> historialPorProducto(Long productoId) {
+        return repository.findByProductoIdOrderByFechaFinDesc(productoId).stream()
+                .filter(o -> o.getEstado() == EstadoOrdenFabricacion.FINALIZADA)
+                .map(this::aResponse)
+                .toList();
+    }
 }
