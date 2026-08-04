@@ -1,5 +1,6 @@
 package com.fabrixa.backend.pedidos.repository;
 
+import com.fabrixa.backend.comercial.model.Producto;
 import com.fabrixa.backend.pedidos.model.Pedido;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -13,4 +14,5 @@ public interface PedidoRepository extends JpaRepository<Pedido, Long> {
             "((:soloCancelados = true AND p.estado = 'CANCELADO') OR (:soloCancelados = false AND p.estado <> 'CANCELADO')) AND " +
             "LOWER(p.cliente.razonSocial) LIKE LOWER(CONCAT('%', :busqueda, '%'))")
     Page<Pedido> buscar(@Param("soloCancelados") boolean soloCancelados, @Param("busqueda") String busqueda, Pageable pageable);
+
 }

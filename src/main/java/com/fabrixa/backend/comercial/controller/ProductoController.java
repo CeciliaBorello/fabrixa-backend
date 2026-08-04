@@ -74,4 +74,9 @@ public class ProductoController {
     public List<Response> listarProductosBase() {
         return service.listarProductosBase();
     }
+
+    @GetMapping("/{id}/presentaciones")
+    public List<Response> listarPresentaciones(@PathVariable Long id) {
+        return service.listarPresentaciones(id);
+    }
 }

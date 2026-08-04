@@ -15,16 +15,17 @@ public interface ProductoRepository extends JpaRepository<Producto, Long> {
 
     Page<Producto> findByActivoTrueAndTipoIn(List<TipoProducto> tipos, Pageable pageable);
 
-    @Query("SELECT p FROM Producto p WHERE p.activo = :activo AND p.tipo IN :tipos AND " +
+    @Query("SELECT p FROM Producto p WHERE p.activo = :activo AND p.tipo IN :tipos AND p.productoBase IS NULL AND " +
             "(LOWER(p.nombre) LIKE LOWER(CONCAT('%', :busqueda, '%')) " +
             "OR LOWER(p.codigoBarra) LIKE LOWER(CONCAT('%', :busqueda, '%')))")
     Page<Producto> buscar(@Param("activo") boolean activo, @Param("tipos") List<TipoProducto> tipos,
                           @Param("busqueda") String busqueda, Pageable pageable);
+
+    List<Producto> findByProductoBaseIdAndActivoTrueOrderByPresentacion(Long productoBaseId);
 
     boolean existsByNombreIgnoreCase(String nombre);
     boolean existsByNombreIgnoreCaseAndIdNot(String nombre, Long id);
 
     List<Producto> findByProductoBaseIsNullOrderByNombre(); // solo productos "raíz", para elegir como base
     List<Producto> findByProductoBaseIsNullAndActivoTrueOrderByNombre();
-    List<Producto> findByProductoBaseIdOrderByPresentacion(Long productoBaseId);
 }

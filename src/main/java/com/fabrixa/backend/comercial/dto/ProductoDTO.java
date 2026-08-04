@@ -21,9 +21,18 @@ public class ProductoDTO {
     ) {}
 
     public record Response(
-            Long id, String nombre, TipoProducto tipo, String codigoBarra, String rnpa,
-            String valorNutricional, UnidadMedida unidadMedida, CategoriaProducto categoria,
-            BigDecimal precioActual, boolean activo,
-            String presentacion // <-- el campo nuevo que falta pasar
+            Long id,
+            String nombre,
+            TipoProducto tipo,
+            String codigoBarra,
+            String rnpa,
+            String valorNutricional,
+            UnidadMedida unidadMedida,
+            CategoriaProducto categoria,
+            BigDecimal precioActual,
+            boolean activo,
+            Long productoBaseId,
+            String productoBaseNombre,
+            String presentacion
     ) {}
 }
