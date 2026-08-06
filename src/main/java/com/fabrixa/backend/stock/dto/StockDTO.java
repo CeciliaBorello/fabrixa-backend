@@ -1,25 +1,26 @@
 package com.fabrixa.backend.stock.dto;
 
-import com.fabrixa.backend.stock.model.TipoMovimientoStock;
-
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
 
 public class StockDTO {
 
-    public record StockActualResponse(Long productoId, String productoNombre, BigDecimal cantidad) {}
+    public record AjusteRequest(Long productoId, BigDecimal delta, String motivo) {}
 
     public record MovimientoResponse(
-            Long id,
-            Long productoId,
-            String productoNombre,
-            TipoMovimientoStock tipo,
-            BigDecimal cantidad,
-            LocalDateTime fecha,
-            String referenciaTipo,
-            Long referenciaId,
-            String motivo
+            Long id, Long productoId, String productoNombre,
+            com.fabrixa.backend.stock.model.TipoMovimientoStock tipo,
+            BigDecimal cantidad, java.time.LocalDateTime fecha,
+            String referenciaTipo, Long referenciaId, String motivo
     ) {}
 
-    public record AjusteRequest(Long productoId, BigDecimal delta, String motivo) {}
+    public record StockActualResponse(Long productoId, String productoNombre, BigDecimal cantidad) {}
+
+    // fila combinada: producto + su stock, para el listado paginado
+    public record FilaResponse(
+            Long productoId,
+            String productoNombre,
+            BigDecimal cantidad,
+            String unidadMedida,
+            boolean tienePresentaciones
+    ) {}
 }

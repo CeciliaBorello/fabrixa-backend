@@ -7,8 +7,8 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import java.util.List;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
+import java.math.BigDecimal;
+import java.util.Map;
 import org.springframework.data.domain.Sort;
 
 @RestController
@@ -67,5 +67,10 @@ public class OrdenFabricacionController {
     @GetMapping("/por-producto/{productoId}")
     public List<Response> historialPorProducto(@PathVariable Long productoId) {
         return service.historialPorProducto(productoId);
+    }
+
+    @GetMapping("/ultimo-costo")
+    public Map<Long, BigDecimal> ultimoCostoPorProductos(@RequestParam List<Long> ids) {
+        return service.ultimoCostoPorProductos(ids);
     }
 }

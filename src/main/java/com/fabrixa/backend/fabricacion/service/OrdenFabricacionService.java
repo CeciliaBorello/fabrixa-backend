@@ -9,7 +9,6 @@ import com.fabrixa.backend.fabricacion.model.LoteProduccion;
 import com.fabrixa.backend.fabricacion.model.OrdenFabricacion;
 import com.fabrixa.backend.fabricacion.repository.FormulaProductoRepository;
 import com.fabrixa.backend.fabricacion.repository.OrdenFabricacionRepository;
-import com.fabrixa.backend.pedidos.dto.PedidoDTO;
 import com.fabrixa.backend.stock.model.TipoMovimientoStock;
 import com.fabrixa.backend.stock.service.StockService;
 import com.fabrixa.backend.usuarios.model.Usuario;
@@ -20,8 +19,9 @@ import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import com.fabrixa.backend.comercial.model.ConversorUnidades;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
+import java.math.BigDecimal;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -206,5 +206,14 @@ public class OrdenFabricacionService {
                 .filter(o -> o.getEstado() == EstadoOrdenFabricacion.FINALIZADA)
                 .map(this::aResponse)
                 .toList();
+    }
+
+    public Map<Long, BigDecimal> ultimoCostoPorProductos(List<Long> ids) {
+        Map<Long, BigDecimal> resultado = new LinkedHashMap<>();
+        for (OrdenFabricacion o : repository.findUltimasFinalizadasPorProductos(ids)) {
+            // como vienen ordenadas por fecha desc, la primera que aparece para cada producto es la más reciente
+            resultado.putIfAbsent(o.getProducto().getId(), o.getCostoUnitarioProducido());
+        }
+        return resultado;
     }
 }

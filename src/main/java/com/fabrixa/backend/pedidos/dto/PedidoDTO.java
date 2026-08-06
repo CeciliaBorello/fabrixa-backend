@@ -20,6 +20,7 @@ public class PedidoDTO {
             String usuarioNombre,
             EstadoPedido estado,
             LocalDateTime fechaPedido,
+            LocalDateTime fechaModificacion,
             LocalDateTime fechaEntrega,
             List<ItemResponse> items
     ) {}

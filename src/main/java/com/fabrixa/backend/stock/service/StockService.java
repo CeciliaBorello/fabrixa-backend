@@ -2,6 +2,7 @@ package com.fabrixa.backend.stock.service;
 
 import com.fabrixa.backend.comercial.model.Producto;
 import com.fabrixa.backend.comercial.repository.ProductoRepository;
+import com.fabrixa.backend.stock.dto.StockDTO;
 import com.fabrixa.backend.stock.dto.StockDTO.AjusteRequest;
 import com.fabrixa.backend.stock.dto.StockDTO.MovimientoResponse;
 import com.fabrixa.backend.stock.dto.StockDTO.StockActualResponse;
@@ -12,9 +13,16 @@ import com.fabrixa.backend.stock.repository.StockActualRepository;
 import com.fabrixa.backend.stock.repository.StockMovimientoRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import com.fabrixa.backend.comercial.model.TipoProducto;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import java.math.BigDecimal;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 public class StockService {
@@ -119,5 +127,47 @@ public class StockService {
                 m.getId(), m.getProducto().getId(), m.getProducto().getNombre(),
                 m.getTipo(), m.getCantidad(), m.getFecha(), m.getReferenciaTipo(), m.getReferenciaId(), m.getMotivo()
         );
+    }
+
+    public Page<StockDTO.FilaResponse> listarPaginado(String grupo, boolean activo, String busqueda, Pageable pageable) {
+        List<TipoProducto> tipos = "insumos".equals(grupo)
+                ? List.of(TipoProducto.INSUMO, TipoProducto.AMBOS)
+                : List.of(TipoProducto.TERMINADO, TipoProducto.AMBOS);
+
+        Page<Producto> pagina = productoRepository.buscar(activo, tipos, busqueda, pageable);
+
+        List<Long> ids = pagina.getContent().stream().map(Producto::getId).toList();
+
+        Map<Long, BigDecimal> cantidades = stockActualRepository.findAllById(ids).stream()
+                .collect(Collectors.toMap(StockActual::getProductoId, StockActual::getCantidad));
+
+        Set<Long> conPresentaciones = "insumos".equals(grupo)
+                ? Set.of()
+                : new HashSet<>(productoRepository.findProductoBaseIdsConPresentaciones(ids));
+
+        return pagina.map(p -> new StockDTO.FilaResponse(
+                p.getId(),
+                p.getNombre(),
+                cantidades.getOrDefault(p.getId(), BigDecimal.ZERO),
+                p.getUnidadMedida().name(),
+                conPresentaciones.contains(p.getId())
+        ));
+    }
+
+    public List<StockDTO.FilaResponse> presentacionesConStock(Long productoBaseId) {
+        List<Producto> presentaciones = productoRepository.findByProductoBaseIdAndActivoTrueOrderByPresentacion(productoBaseId);
+        List<Long> ids = presentaciones.stream().map(Producto::getId).toList();
+
+        Map<Long, BigDecimal> cantidades = stockActualRepository.findAllById(ids).stream()
+                .collect(Collectors.toMap(StockActual::getProductoId, StockActual::getCantidad));
+
+        return presentaciones.stream()
+                .map(p -> new StockDTO.FilaResponse(
+                        p.getId(), p.getNombre(),
+                        cantidades.getOrDefault(p.getId(), BigDecimal.ZERO),
+                        p.getUnidadMedida().name(),
+                        false
+                ))
+                .toList();
     }
 }

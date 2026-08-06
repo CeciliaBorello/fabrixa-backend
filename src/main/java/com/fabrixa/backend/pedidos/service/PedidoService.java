@@ -136,6 +136,7 @@ public class PedidoService {
                 p.getUsuario().getNombre(),
                 p.getEstado(),
                 p.getFechaPedido(),
+                p.getFechaModificacion(),
                 p.getFechaEntrega(),
                 items
         );

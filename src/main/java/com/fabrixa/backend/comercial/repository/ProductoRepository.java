@@ -28,4 +28,7 @@ public interface ProductoRepository extends JpaRepository<Producto, Long> {
 
     List<Producto> findByProductoBaseIsNullOrderByNombre(); // solo productos "raíz", para elegir como base
     List<Producto> findByProductoBaseIsNullAndActivoTrueOrderByNombre();
+
+    @Query("SELECT DISTINCT p.productoBase.id FROM Producto p WHERE p.productoBase.id IN :ids")
+    List<Long> findProductoBaseIdsConPresentaciones(@Param("ids") List<Long> ids);
 }
