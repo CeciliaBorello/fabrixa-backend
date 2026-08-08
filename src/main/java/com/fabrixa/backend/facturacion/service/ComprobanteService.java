@@ -91,7 +91,9 @@ public class ComprobanteService {
         guardado = repository.save(guardado);
 
         boolean llevaRemito = Boolean.TRUE.equals(request.llevaRemito())
-                && (request.tipo() == TipoComprobante.FACTURA_A || request.tipo() == TipoComprobante.FACTURA_B_REMITO);
+                && (request.tipo() == TipoComprobante.FACTURA_A
+                || request.tipo() == TipoComprobante.FACTURA_B_REMITO
+                || request.tipo() == TipoComprobante.FACTURA_C_REMITO);
 
         if (llevaRemito) {
             RemitoViaje remito = new RemitoViaje();
@@ -113,7 +115,7 @@ public class ComprobanteService {
 
     private void aplicarDireccionYOrigen(Comprobante c, Request request) {
         switch (request.tipo()) {
-            case FACTURA_A, FACTURA_B_REMITO, RECIBO_COBRO, PAGO_CONTADO -> {
+            case FACTURA_A, FACTURA_B_REMITO, FACTURA_C_REMITO, RECIBO_COBRO, PAGO_CONTADO -> {
                 c.setDireccion(DireccionComprobante.VENTA);
                 c.setOrigen(OrigenComprobante.GENERADO);
             }
@@ -128,7 +130,6 @@ public class ComprobanteService {
             case NOTA_CREDITO, NOTA_DEBITO -> {
                 OrigenComprobante origen = request.origen() != null ? request.origen() : OrigenComprobante.GENERADO;
                 c.setOrigen(origen);
-                // generada por nosotros -> normalmente corrige una venta; recibida de un proveedor -> corrige una compra
                 c.setDireccion(origen == OrigenComprobante.GENERADO ? DireccionComprobante.VENTA : DireccionComprobante.COMPRA);
             }
         }
@@ -371,8 +372,14 @@ public class ComprobanteService {
 
         RemitoViajeResponse remito = c.getRemitoViaje() != null ? new RemitoViajeResponse(
                 c.getRemitoViaje().getId(), c.getRemitoViaje().getNumero(), c.getRemitoViaje().getTransportista(),
-                c.getRemitoViaje().getChofer(), c.getRemitoViaje().getPatente(), c.getRemitoViaje().getFecha()
+                c.getRemitoViaje().getChofer(), c.getRemitoViaje().getPatente(), c.getRemitoViaje().getFecha(), c.getRemitoViaje().getEstadoArca(), c.getRemitoViaje().getCodigoAutorizacion()
         ) : null;
+
+        BigDecimal montoPendiente = null;
+        if (c.getEstadoCobro() != null || c.getEstadoPago() != null) {
+            BigDecimal yaAplicado = sumaRecibosNoAnulados(c.getId());
+            montoPendiente = c.getTotal().subtract(yaAplicado);
+        }
 
         return new Response(
                 c.getId(), c.getTipo(), c.getDireccion(), c.getOrigen(), c.getNumero(), c.getPuntoVenta(),
@@ -380,7 +387,7 @@ public class ComprobanteService {
                 c.getFechaEmision(), c.getFechaVencimiento(), c.getEstado(), c.getEstadoCobro(), c.getEstadoPago(),
                 c.getSubtotal(), c.getIvaTotal(), c.getTotal(), c.getUsuario().getNombre(),
                 c.getComprobanteAfectado() != null ? c.getComprobanteAfectado().getId() : null,
-                c.getFechaModificacion(), items, remito, formasPago, c.getCae(), c.getCaeVencimiento(), c.getEstadoArca()
+                c.getFechaModificacion(), items, remito, formasPago, c.getCae(), c.getCaeVencimiento(), c.getEstadoArca(), montoPendiente
         );
     }
 
@@ -413,5 +420,27 @@ public class ComprobanteService {
         repository.save(c);
 
         throw new IllegalArgumentException("La integración con ARCA todavía no está conectada. El comprobante quedó marcado como pendiente para cuando la activemos.");
+    }
+
+    public Response generarArcaRemito(Long comprobanteId) {
+        Comprobante c = obtenerOFallar(comprobanteId);
+        if (c.getRemitoViaje() == null) {
+            throw new IllegalArgumentException("Este comprobante no tiene remito de viaje");
+        }
+        if (c.getRemitoViaje().getEstadoArca() == EstadoArca.ENVIADO) {
+            throw new IllegalArgumentException("Este remito ya fue enviado a ARCA");
+        }
+
+        // TODO: acá va la integración real con el servicio de Remito Electrónico cuando esté conectada.
+        c.getRemitoViaje().setEstadoArca(EstadoArca.PENDIENTE);
+        repository.save(c);
+
+        throw new IllegalArgumentException("La integración de Remito Electrónico todavía no está conectada. Quedó marcado como pendiente.");
+    }
+
+    public List<Response> comprobantesRelacionados(Long id) {
+        return repository.findByComprobanteAfectadoIdOrderByFechaEmisionDesc(id).stream()
+                .map(this::aResponse)
+                .toList();
     }
 }

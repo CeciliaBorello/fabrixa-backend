@@ -30,4 +30,6 @@ public interface ComprobanteRepository extends JpaRepository<Comprobante, Long> 
             "((:direccion = 'VENTA' AND c.estadoCobro <> 'COBRADO') OR (:direccion = 'COMPRA' AND c.estadoPago <> 'PAGADO')) " +
             "ORDER BY c.fechaEmision")
     List<Comprobante> findPendientesPorCliente(@Param("clienteId") Long clienteId, @Param("direccion") DireccionComprobante direccion);
+
+    List<Comprobante> findByComprobanteAfectadoIdOrderByFechaEmisionDesc(Long comprobanteAfectadoId);
 }

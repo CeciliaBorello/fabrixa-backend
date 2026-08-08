@@ -39,35 +39,18 @@ public class ComprobanteDTO {
             BigDecimal porcentajeIva, BigDecimal subtotal, BigDecimal ivaItem, BigDecimal totalItem
     ) {}
 
-    public record RemitoViajeResponse(Long id, String numero, String transportista, String chofer, String patente, LocalDate fecha) {}
+    public record RemitoViajeResponse(Long id, String numero, String transportista, String chofer, String patente, LocalDate fecha, EstadoArca estadoArca, String codigoAutorizacion) {}
 
     public record FormaPagoResponse(Long id, TipoFormaPago tipo, BigDecimal monto, Long chequeId, String chequeNumero) {}
 
     public record Response(
-            Long id,
-            TipoComprobante tipo,
-            DireccionComprobante direccion,
-            OrigenComprobante origen,
-            String numero,
-            String puntoVenta,
-            Long clienteProveedorId,
-            String clienteProveedorNombre,
-            LocalDate fechaEmision,
-            LocalDate fechaVencimiento,
-            EstadoComprobante estado,
-            EstadoCobro estadoCobro,
-            EstadoPago estadoPago,
-            BigDecimal subtotal,
-            BigDecimal ivaTotal,
-            BigDecimal total,
-            String usuarioNombre,
-            Long comprobanteAfectadoId,
-            LocalDateTime fechaModificacion,
-            List<ItemResponse> items,
-            RemitoViajeResponse remitoViaje,
-            List<FormaPagoResponse> formasPago,
-            String cae,
-            java.time.LocalDate caeVencimiento,
-            EstadoArca estadoArca
+            Long id, TipoComprobante tipo, DireccionComprobante direccion, OrigenComprobante origen,
+            String numero, String puntoVenta, Long clienteProveedorId, String clienteProveedorNombre,
+            LocalDate fechaEmision, LocalDate fechaVencimiento, EstadoComprobante estado,
+            EstadoCobro estadoCobro, EstadoPago estadoPago, BigDecimal subtotal, BigDecimal ivaTotal, BigDecimal total,
+            String usuarioNombre, Long comprobanteAfectadoId, LocalDateTime fechaModificacion,
+            List<ItemResponse> items, RemitoViajeResponse remitoViaje, List<FormaPagoResponse> formasPago,
+            String cae, LocalDate caeVencimiento, EstadoArca estadoArca,
+            BigDecimal montoPendiente
     ) {}
 }

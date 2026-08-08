@@ -69,4 +69,14 @@ public class ComprobanteController {
     public Response generarArca(@PathVariable Long id) {
         return service.generarArca(id);
     }
+    @PostMapping("/{id}/generar-arca-remito")
+    public Response generarArcaRemito(@PathVariable Long id) {
+        return service.generarArcaRemito(id);
+    }
+
+    @GetMapping("/{id}/relacionados")
+    public List<Response> relacionados(@PathVariable Long id) {
+        return service.comprobantesRelacionados(id);
+    }
+
 }

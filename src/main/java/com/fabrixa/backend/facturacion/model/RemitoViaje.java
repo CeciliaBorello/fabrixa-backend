@@ -25,4 +25,11 @@ public class RemitoViaje {
     private String chofer;
     private String patente;
     private LocalDate fecha;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "estado_arca", nullable = false)
+    private EstadoArca estadoArca = EstadoArca.NO_GENERADO;
+
+    @Column(name = "codigo_autorizacion")
+    private String codigoAutorizacion;
 }
