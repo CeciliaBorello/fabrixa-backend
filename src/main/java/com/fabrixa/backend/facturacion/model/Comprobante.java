@@ -84,4 +84,23 @@ public class Comprobante {
 
     @OneToOne(mappedBy = "comprobante", cascade = CascadeType.ALL, orphanRemoval = true)
     private RemitoViaje remitoViaje;
+
+    @Column(nullable = false)
+    private BigDecimal subtotal = BigDecimal.ZERO; // neto, sin IVA
+
+    @Column(name = "iva_total", nullable = false)
+    private BigDecimal ivaTotal = BigDecimal.ZERO;
+    private String cae;
+
+    @Column(name = "cae_vencimiento")
+    private LocalDate caeVencimiento;
+
+    private String moneda = "PES";
+
+    private BigDecimal cotizacion = BigDecimal.ONE;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "estado_arca", nullable = false)
+    private EstadoArca estadoArca = EstadoArca.NO_GENERADO;
+
 }

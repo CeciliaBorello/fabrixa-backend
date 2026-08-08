@@ -1,6 +1,7 @@
 package com.fabrixa.backend.facturacion.repository;
 
 import com.fabrixa.backend.facturacion.model.Comprobante;
+import com.fabrixa.backend.facturacion.model.EstadoComprobante;
 import com.fabrixa.backend.facturacion.model.TipoComprobante;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -15,10 +16,10 @@ public interface ComprobanteRepository extends JpaRepository<Comprobante, Long> 
 
     @Query("SELECT c FROM Comprobante c WHERE " +
             "(:tipos IS NULL OR c.tipo IN :tipos) AND " +
-            "(:soloAnulados = true AND c.estado = 'ANULADO' OR :soloAnulados = false AND c.estado <> 'ANULADO') AND " +
+            "(:estado IS NULL OR c.estado = :estado) AND " +
             "LOWER(c.clienteProveedor.razonSocial) LIKE LOWER(CONCAT('%', :busqueda, '%'))")
     Page<Comprobante> buscar(@Param("tipos") List<TipoComprobante> tipos,
-                             @Param("soloAnulados") boolean soloAnulados,
+                             @Param("estado") EstadoComprobante estado,
                              @Param("busqueda") String busqueda,
                              Pageable pageable);
 

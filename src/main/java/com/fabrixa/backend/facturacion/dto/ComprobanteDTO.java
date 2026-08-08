@@ -9,12 +9,10 @@ import java.util.List;
 
 public class ComprobanteDTO {
 
-    public record ItemRequest(Long productoId, BigDecimal cantidad, BigDecimal precioUnitario) {}
+    public record ItemRequest(Long productoId, BigDecimal cantidad, BigDecimal precioUnitario, BigDecimal porcentajeIva) {}
 
-    public record RemitoViajeRequest(String numero, String transportista, String chofer, String patente) {}
+    public record RemitoViajeRequest(String transportista, String chofer, String patente) {}
 
-    // para RECIBO_COBRO: si chequeId es null y tipo=CHEQUE, se crea un cheque nuevo con estos datos
-    // para RECIBO_PAGO: chequeId obligatorio si tipo=CHEQUE (se entrega un cheque que ya está en cartera)
     public record FormaPagoRequest(
             TipoFormaPago tipo,
             BigDecimal monto,
@@ -32,10 +30,14 @@ public class ComprobanteDTO {
             List<ItemRequest> items,
             List<FormaPagoRequest> formasPago,
             Long comprobanteAfectadoId,
+            Boolean llevaRemito,
             RemitoViajeRequest remitoViaje
     ) {}
 
-    public record ItemResponse(Long id, Long productoId, String productoNombre, BigDecimal cantidad, BigDecimal precioUnitario, BigDecimal subtotal) {}
+    public record ItemResponse(
+            Long id, Long productoId, String productoNombre, BigDecimal cantidad, BigDecimal precioUnitario,
+            BigDecimal porcentajeIva, BigDecimal subtotal, BigDecimal ivaItem, BigDecimal totalItem
+    ) {}
 
     public record RemitoViajeResponse(Long id, String numero, String transportista, String chofer, String patente, LocalDate fecha) {}
 
@@ -55,12 +57,17 @@ public class ComprobanteDTO {
             EstadoComprobante estado,
             EstadoCobro estadoCobro,
             EstadoPago estadoPago,
+            BigDecimal subtotal,
+            BigDecimal ivaTotal,
             BigDecimal total,
             String usuarioNombre,
             Long comprobanteAfectadoId,
             LocalDateTime fechaModificacion,
             List<ItemResponse> items,
             RemitoViajeResponse remitoViaje,
-            List<FormaPagoResponse> formasPago
+            List<FormaPagoResponse> formasPago,
+            String cae,
+            java.time.LocalDate caeVencimiento,
+            EstadoArca estadoArca
     ) {}
 }

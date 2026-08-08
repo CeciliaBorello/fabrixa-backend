@@ -68,28 +68,44 @@ public class ComprobanteService {
         comprobante.setFechaEmision(LocalDate.now());
         comprobante.setFechaVencimiento(request.fechaVencimiento());
         comprobante.setEstado(EstadoComprobante.EMITIDO);
+        comprobante.setSubtotal(BigDecimal.ZERO);
+        comprobante.setIvaTotal(BigDecimal.ZERO);
+        comprobante.setTotal(BigDecimal.ZERO);
 
         aplicarDireccionYOrigen(comprobante, request);
 
-        switch (request.tipo()) {
-            case FACTURA_A, FACTURA_B_REMITO -> crearConItemsVenta(comprobante, request);
-            case FACTURA_COMPRA -> crearConItemsCompra(comprobante, request);
-            case NOTA_CREDITO, NOTA_DEBITO -> crearNotaFinanciera(comprobante, request);
-            case RECIBO_COBRO, PAGO_CONTADO -> crearReciboCobro(comprobante, request);
-            case RECIBO_PAGO -> crearReciboPago(comprobante, request);
-        }
-
         Comprobante guardado = repository.save(comprobante);
 
-        if (request.remitoViaje() != null && (request.tipo() == TipoComprobante.FACTURA_A || request.tipo() == TipoComprobante.FACTURA_B_REMITO)) {
+        guardado.setPuntoVenta("0001");
+        guardado.setNumero(String.format("%08d", guardado.getId()));
+        guardado = repository.save(guardado);
+
+        switch (request.tipo()) {
+            case FACTURA_A, FACTURA_B_REMITO -> crearConItemsVenta(guardado, request);
+            case FACTURA_COMPRA -> crearConItemsCompra(guardado, request);
+            case NOTA_CREDITO, NOTA_DEBITO -> crearNotaFinanciera(guardado, request);
+            case RECIBO_COBRO, PAGO_CONTADO -> crearReciboCobro(guardado, request);
+            case RECIBO_PAGO -> crearReciboPago(guardado, request);
+        }
+
+        guardado = repository.save(guardado);
+
+        boolean llevaRemito = Boolean.TRUE.equals(request.llevaRemito())
+                && (request.tipo() == TipoComprobante.FACTURA_A || request.tipo() == TipoComprobante.FACTURA_B_REMITO);
+
+        if (llevaRemito) {
             RemitoViaje remito = new RemitoViaje();
             remito.setComprobante(guardado);
-            remito.setNumero(request.remitoViaje().numero());
-            remito.setTransportista(request.remitoViaje().transportista());
-            remito.setChofer(request.remitoViaje().chofer());
-            remito.setPatente(request.remitoViaje().patente());
+            if (request.remitoViaje() != null) {
+                remito.setTransportista(request.remitoViaje().transportista());
+                remito.setChofer(request.remitoViaje().chofer());
+                remito.setPatente(request.remitoViaje().patente());
+            }
             remito.setFecha(LocalDate.now());
             guardado.setRemitoViaje(remito);
+
+            guardado = repository.save(guardado);
+            guardado.getRemitoViaje().setNumero(String.format("REM-%05d", guardado.getRemitoViaje().getId()));
         }
 
         return aResponse(repository.save(guardado));
@@ -119,11 +135,9 @@ public class ComprobanteService {
     }
 
     private void crearConItemsVenta(Comprobante c, Request request) {
-        BigDecimal total = agregarItems(c, request);
-        c.setTotal(total);
+        agregarItems(c, request);
         c.setEstadoCobro(EstadoCobro.PENDIENTE);
 
-        // descuenta stock de cada producto vendido
         for (ItemComprobante item : c.getItems()) {
             stockService.registrarMovimiento(
                     item.getProducto().getId(), TipoMovimientoStock.EGRESO_VENTA, item.getCantidad(),
@@ -133,8 +147,7 @@ public class ComprobanteService {
     }
 
     private void crearConItemsCompra(Comprobante c, Request request) {
-        BigDecimal total = agregarItems(c, request);
-        c.setTotal(total);
+        agregarItems(c, request);
         c.setEstadoPago(EstadoPago.RECIBIDO);
 
         for (ItemComprobante item : c.getItems()) {
@@ -145,26 +158,38 @@ public class ComprobanteService {
         }
     }
 
-    private BigDecimal agregarItems(Comprobante c, Request request) {
+    private void agregarItems(Comprobante c, Request request) {
         if (request.items() == null || request.items().isEmpty()) {
             throw new IllegalArgumentException("El comprobante necesita al menos un ítem");
         }
-        BigDecimal total = BigDecimal.ZERO;
+
+        BigDecimal subtotalNeto = BigDecimal.ZERO;
+        BigDecimal ivaAcumulado = BigDecimal.ZERO;
+
         for (ItemRequest itemReq : request.items()) {
             Producto producto = productoRepository.findById(itemReq.productoId())
                     .orElseThrow(() -> new IllegalArgumentException("Producto no encontrado: " + itemReq.productoId()));
+
+            BigDecimal porcentajeIva = itemReq.porcentajeIva() != null ? itemReq.porcentajeIva() : BigDecimal.valueOf(21);
+            BigDecimal subtotalItem = itemReq.cantidad().multiply(itemReq.precioUnitario());
+            BigDecimal ivaItem = subtotalItem.multiply(porcentajeIva).divide(BigDecimal.valueOf(100), 2, java.math.RoundingMode.HALF_UP);
 
             ItemComprobante item = new ItemComprobante();
             item.setComprobante(c);
             item.setProducto(producto);
             item.setCantidad(itemReq.cantidad());
             item.setPrecioUnitario(itemReq.precioUnitario());
-            BigDecimal subtotal = itemReq.cantidad().multiply(itemReq.precioUnitario());
-            item.setSubtotal(subtotal);
+            item.setPorcentajeIva(porcentajeIva);
+            item.setSubtotal(subtotalItem);
             c.getItems().add(item);
-            total = total.add(subtotal);
+
+            subtotalNeto = subtotalNeto.add(subtotalItem);
+            ivaAcumulado = ivaAcumulado.add(ivaItem);
         }
-        return total;
+
+        c.setSubtotal(subtotalNeto);
+        c.setIvaTotal(ivaAcumulado);
+        c.setTotal(subtotalNeto.add(ivaAcumulado));
     }
 
     private void crearNotaFinanciera(Comprobante c, Request request) {
@@ -173,13 +198,12 @@ public class ComprobanteService {
         }
         BigDecimal total = request.formasPago().stream().map(FormaPagoRequest::monto).reduce(BigDecimal.ZERO, BigDecimal::add);
         c.setTotal(total);
+        c.setSubtotal(total); // sin discriminar IVA en este tipo de comprobante
 
         if (request.comprobanteAfectadoId() != null) {
             Comprobante afectado = obtenerOFallar(request.comprobanteAfectadoId());
             c.setComprobanteAfectado(afectado);
         }
-        // las NC/ND no generan movimiento de stock ni de formas de pago en esta primera versión —
-        // son puramente financieras, se resuelven contablemente cuando exista el módulo de Contabilidad
     }
 
     @Transactional
@@ -315,8 +339,8 @@ public class ComprobanteService {
         return aResponse(repository.save(c));
     }
 
-    public Page<Response> buscar(List<TipoComprobante> tipos, boolean soloAnulados, String busqueda, Pageable pageable) {
-        return repository.buscar(tipos, soloAnulados, busqueda, pageable).map(this::aResponse);
+    public Page<Response> buscar(List<TipoComprobante> tipos, EstadoComprobante estado, String busqueda, Pageable pageable) {
+        return repository.buscar(tipos, estado, busqueda, pageable).map(this::aResponse);
     }
 
     public Response buscarPorId(Long id) {
@@ -329,7 +353,14 @@ public class ComprobanteService {
 
     private Response aResponse(Comprobante c) {
         List<ItemResponse> items = c.getItems().stream()
-                .map(i -> new ItemResponse(i.getId(), i.getProducto().getId(), i.getProducto().getNombre(), i.getCantidad(), i.getPrecioUnitario(), i.getSubtotal()))
+                .map(i -> {
+                    BigDecimal ivaItem = i.getSubtotal().multiply(i.getPorcentajeIva())
+                            .divide(BigDecimal.valueOf(100), 2, java.math.RoundingMode.HALF_UP);
+                    return new ItemResponse(
+                            i.getId(), i.getProducto().getId(), i.getProducto().getNombre(), i.getCantidad(),
+                            i.getPrecioUnitario(), i.getPorcentajeIva(), i.getSubtotal(), ivaItem, i.getSubtotal().add(ivaItem)
+                    );
+                })
                 .toList();
 
         List<FormaPagoResponse> formasPago = formaPagoRepository.findByComprobanteId(c.getId()).stream()
@@ -347,9 +378,9 @@ public class ComprobanteService {
                 c.getId(), c.getTipo(), c.getDireccion(), c.getOrigen(), c.getNumero(), c.getPuntoVenta(),
                 c.getClienteProveedor().getId(), c.getClienteProveedor().getRazonSocial(),
                 c.getFechaEmision(), c.getFechaVencimiento(), c.getEstado(), c.getEstadoCobro(), c.getEstadoPago(),
-                c.getTotal(), c.getUsuario().getNombre(),
+                c.getSubtotal(), c.getIvaTotal(), c.getTotal(), c.getUsuario().getNombre(),
                 c.getComprobanteAfectado() != null ? c.getComprobanteAfectado().getId() : null,
-                c.getFechaModificacion(), items, remito, formasPago
+                c.getFechaModificacion(), items, remito, formasPago, c.getCae(), c.getCaeVencimiento(), c.getEstadoArca()
         );
     }
 
@@ -357,5 +388,30 @@ public class ComprobanteService {
         return repository.findPendientesPorCliente(clienteId, direccion).stream()
                 .map(this::aResponse)
                 .toList();
+    }
+
+    public Response generarArca(Long id) {
+        Comprobante c = obtenerOFallar(id);
+
+        boolean esElegible = (c.getTipo() == TipoComprobante.FACTURA_A || c.getTipo() == TipoComprobante.FACTURA_B_REMITO)
+                || ((c.getTipo() == TipoComprobante.NOTA_CREDITO || c.getTipo() == TipoComprobante.NOTA_DEBITO)
+                && c.getOrigen() == OrigenComprobante.GENERADO);
+
+        if (!esElegible) {
+            throw new IllegalArgumentException("Este tipo de comprobante no se declara ante ARCA");
+        }
+        if (c.getEstado() == EstadoComprobante.ANULADO) {
+            throw new IllegalArgumentException("No se puede generar ARCA de un comprobante anulado");
+        }
+        if (c.getEstadoArca() == EstadoArca.ENVIADO) {
+            throw new IllegalArgumentException("Este comprobante ya fue enviado a ARCA");
+        }
+
+        // TODO: acá va la integración real con TusFacturasAPI cuando tengamos las credenciales.
+        // Por ahora dejamos el estado en PENDIENTE y avisamos que todavía no está conectado.
+        c.setEstadoArca(EstadoArca.PENDIENTE);
+        repository.save(c);
+
+        throw new IllegalArgumentException("La integración con ARCA todavía no está conectada. El comprobante quedó marcado como pendiente para cuando la activemos.");
     }
 }

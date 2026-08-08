@@ -3,12 +3,14 @@ package com.fabrixa.backend.facturacion.controller;
 import com.fabrixa.backend.facturacion.dto.ComprobanteDTO.Request;
 import com.fabrixa.backend.facturacion.dto.ComprobanteDTO.Response;
 import com.fabrixa.backend.facturacion.model.DireccionComprobante;
+import com.fabrixa.backend.facturacion.model.EstadoComprobante;
 import com.fabrixa.backend.facturacion.model.TipoComprobante;
 import com.fabrixa.backend.facturacion.service.ComprobanteService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.data.domain.Sort;
 
 import java.util.List;
 
@@ -26,10 +28,14 @@ public class ComprobanteController {
     public Page<Response> listar(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "fechaModificacion") String sortBy,
+            @RequestParam(defaultValue = "desc") String sortDir,
             @RequestParam(required = false) List<TipoComprobante> tipos,
-            @RequestParam(defaultValue = "false") boolean soloAnulados,
+            @RequestParam(required = false) EstadoComprobante estado,
             @RequestParam(defaultValue = "") String busqueda) {
-        return service.buscar(tipos, soloAnulados, busqueda, PageRequest.of(page, size));
+
+        Sort sort = Sort.by(Sort.Direction.fromString(sortDir), sortBy);
+        return service.buscar(tipos, estado, busqueda, PageRequest.of(page, size, sort));
     }
 
     @GetMapping("/{id}")
@@ -57,5 +63,10 @@ public class ComprobanteController {
     @PutMapping("/{id}/asentar")
     public Response asentar(@PathVariable Long id) {
         return service.asentar(id);
+    }
+
+    @PostMapping("/{id}/generar-arca")
+    public Response generarArca(@PathVariable Long id) {
+        return service.generarArca(id);
     }
 }

@@ -12,4 +12,11 @@ public class GlobalExceptionHandler {
     public ResponseEntity<String> manejarIllegalArgument(IllegalArgumentException ex) {
         return ResponseEntity.badRequest().body(ex.getMessage());
     }
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<String> manejarError(Exception ex) {
+        ex.printStackTrace(); // para que sigas viendo el detalle real en la consola del backend
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body("Ocurrió un error inesperado. Si persiste, contactá a soporte.");
+    }
 }

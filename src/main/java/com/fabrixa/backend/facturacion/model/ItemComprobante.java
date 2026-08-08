@@ -33,4 +33,7 @@ public class ItemComprobante {
 
     @Column(nullable = false)
     private BigDecimal subtotal;
+
+    @Column(name = "porcentaje_iva", nullable = false)
+    private BigDecimal porcentajeIva = BigDecimal.valueOf(21);
 }
