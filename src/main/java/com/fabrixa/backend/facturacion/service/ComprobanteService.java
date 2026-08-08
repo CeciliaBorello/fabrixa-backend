@@ -22,6 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -71,6 +72,7 @@ public class ComprobanteService {
         comprobante.setSubtotal(BigDecimal.ZERO);
         comprobante.setIvaTotal(BigDecimal.ZERO);
         comprobante.setTotal(BigDecimal.ZERO);
+        comprobante.setFechaCreacion(LocalDateTime.now());
 
         aplicarDireccionYOrigen(comprobante, request);
 

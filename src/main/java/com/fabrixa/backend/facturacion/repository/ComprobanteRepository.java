@@ -32,4 +32,6 @@ public interface ComprobanteRepository extends JpaRepository<Comprobante, Long> 
     List<Comprobante> findPendientesPorCliente(@Param("clienteId") Long clienteId, @Param("direccion") DireccionComprobante direccion);
 
     List<Comprobante> findByComprobanteAfectadoIdOrderByFechaEmisionDesc(Long comprobanteAfectadoId);
+
+    List<Comprobante> findByClienteProveedorIdAndEstadoNot(Long clienteProveedorId, EstadoComprobante estado);
 }

@@ -103,4 +103,7 @@ public class Comprobante {
     @Column(name = "estado_arca", nullable = false)
     private EstadoArca estadoArca = EstadoArca.NO_GENERADO;
 
+    @Column(name = "fecha_creacion")
+    private LocalDateTime fechaCreacion;
+
 }
