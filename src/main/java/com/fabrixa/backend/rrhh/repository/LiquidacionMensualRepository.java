@@ -12,4 +12,6 @@ public interface LiquidacionMensualRepository extends JpaRepository<LiquidacionM
     @Query("SELECT l FROM LiquidacionMensual l WHERE " +
             "LOWER(l.empleado.nombre) LIKE LOWER(CONCAT('%', :busqueda, '%'))")
     Page<LiquidacionMensual> buscar(@Param("busqueda") String busqueda, Pageable pageable);
+
+    boolean existsByEmpleadoIdAndPeriodo(Long empleadoId, String periodo);
 }

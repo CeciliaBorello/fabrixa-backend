@@ -6,6 +6,7 @@ import com.fabrixa.backend.rrhh.dto.RegistroHorasDTO.Response;
 import com.fabrixa.backend.rrhh.service.RegistroHorasService;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @RestController
@@ -24,8 +25,11 @@ public class RegistroHorasController {
     }
 
     @GetMapping("/por-empleado/{empleadoId}")
-    public List<Response> porEmpleado(@PathVariable Long empleadoId) {
-        return service.porEmpleado(empleadoId);
+    public List<Response> porEmpleado(
+            @PathVariable Long empleadoId,
+            @RequestParam(required = false) LocalDate fechaDesde,
+            @RequestParam(required = false) LocalDate fechaHasta) {
+        return service.porEmpleado(empleadoId, fechaDesde, fechaHasta);
     }
 
     @GetMapping("/no-liquidadas")

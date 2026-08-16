@@ -21,8 +21,9 @@ public class LiquidacionMensualDTO {
             String empleadoNombre,
             String periodo,
             TipoRemuneracion tipoRemuneracionUsado,
-            BigDecimal totalHoras,       // null si SUELDO_FIJO
-            BigDecimal valorHoraUsado,   // null si SUELDO_FIJO
+            BigDecimal totalHoras,
+            BigDecimal valorHoraUsado,
+            BigDecimal totalAnticiposDescontados,   // NUEVO
             BigDecimal totalAPagar,
             LocalDateTime fechaGeneracion,
             String usuarioNombre

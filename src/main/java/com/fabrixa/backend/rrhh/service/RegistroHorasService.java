@@ -9,6 +9,7 @@ import com.fabrixa.backend.rrhh.repository.RegistroHorasRepository;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -36,9 +37,32 @@ public class RegistroHorasService {
         return aResponse(repository.save(registro));
     }
 
+    /**
+     * Sin rango: comportamiento original (todas las horas pendientes).
+     * Se mantiene por compatibilidad con otros llamadores del service.
+     */
     public List<Response> porEmpleado(Long empleadoId) {
-        return repository.findByEmpleadoIdAndLiquidadoFalseOrderByFechaAsc(empleadoId).stream()
-                .map(this::aResponse).toList();
+        return porEmpleado(empleadoId, null, null);
+    }
+
+    /**
+     * Con fechaDesde/fechaHasta: filtra las horas pendientes al rango elegido.
+     * Si alguna de las dos es null, se ignora el filtro (comportamiento original).
+     */
+    public List<Response> porEmpleado(Long empleadoId, LocalDate fechaDesde, LocalDate fechaHasta) {
+        List<RegistroHoras> registros;
+
+        if (fechaDesde != null && fechaHasta != null) {
+            if (fechaDesde.isAfter(fechaHasta)) {
+                throw new IllegalArgumentException("La fecha desde no puede ser posterior a la fecha hasta");
+            }
+            registros = repository.findByEmpleadoIdAndLiquidadoFalseAndFechaBetweenOrderByFechaAsc(
+                    empleadoId, fechaDesde, fechaHasta);
+        } else {
+            registros = repository.findByEmpleadoIdAndLiquidadoFalseOrderByFechaAsc(empleadoId);
+        }
+
+        return registros.stream().map(this::aResponse).toList();
     }
 
     public List<NoLiquidadasPorEmpleado> noLiquidadasAgrupadas() {
