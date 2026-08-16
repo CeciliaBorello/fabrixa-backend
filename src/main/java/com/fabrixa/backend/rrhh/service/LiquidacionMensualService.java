@@ -38,6 +38,16 @@ public class LiquidacionMensualService {
         this.usuarioRepository = usuarioRepository;
     }
 
+    public Page<Response> listarPaginado(String busqueda, Pageable pageable) {
+        return repository.buscar(busqueda, pageable).map(this::aResponse);
+    }
+
+    private Response aResponse(LiquidacionMensual l) {
+        return new Response(l.getId(), l.getEmpleado().getId(), l.getEmpleado().getNombre(), l.getPeriodo(),
+                l.getTipoRemuneracionUsado(), l.getTotalHoras(), l.getValorHoraUsado(), l.getTotalAPagar(),
+                l.getFechaGeneracion(), l.getUsuario().getNombre());
+    }
+
     @Transactional
     public Response generar(Request request, Authentication auth) {
         Empleado empleado = empleadoService.obtenerOFallar(request.empleadoId());
@@ -61,9 +71,18 @@ public class LiquidacionMensualService {
             liquidacion.setTotalHoras(null);
             liquidacion.setValorHoraUsado(null);
         } else {
-            pendientes = registroRepository.findByEmpleadoIdAndLiquidadoFalseOrderByFechaAsc(empleado.getId());
+            if (request.fechaDesde() == null || request.fechaHasta() == null) {
+                throw new IllegalArgumentException("Falta el rango de fechas para liquidar horas");
+            }
+            if (request.fechaDesde().isAfter(request.fechaHasta())) {
+                throw new IllegalArgumentException("La fecha desde no puede ser posterior a la fecha hasta");
+            }
+
+            pendientes = registroRepository.findByEmpleadoIdAndLiquidadoFalseAndFechaBetweenOrderByFechaAsc(
+                    empleado.getId(), request.fechaDesde(), request.fechaHasta()
+            );
             if (pendientes.isEmpty()) {
-                throw new IllegalArgumentException("Este empleado no tiene horas pendientes de liquidar");
+                throw new IllegalArgumentException("No hay horas pendientes en el rango seleccionado");
             }
 
             BigDecimal totalHoras = pendientes.stream()
@@ -86,15 +105,4 @@ public class LiquidacionMensualService {
 
         return aResponse(guardada);
     }
-
-    public Page<Response> listarPaginado(String busqueda, Pageable pageable) {
-        return repository.buscar(busqueda, pageable).map(this::aResponse);
-    }
-
-    private Response aResponse(LiquidacionMensual l) {
-        return new Response(l.getId(), l.getEmpleado().getId(), l.getEmpleado().getNombre(), l.getPeriodo(),
-                l.getTipoRemuneracionUsado(), l.getTotalHoras(), l.getValorHoraUsado(), l.getTotalAPagar(),
-                l.getFechaGeneracion(), l.getUsuario().getNombre());
-    }
-
 }

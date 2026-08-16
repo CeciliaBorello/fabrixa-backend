@@ -18,4 +18,8 @@ public interface RegistroHorasRepository extends JpaRepository<RegistroHoras, Lo
     List<RegistroHoras> findByEmpleadoIdAndFechaBetweenOrderByFechaAsc(Long empleadoId, LocalDate desde, LocalDate hasta);
 
     List<RegistroHoras> findByLiquidacionId(Long liquidacionId);
+
+    List<RegistroHoras> findByEmpleadoIdAndLiquidadoFalseAndFechaBetweenOrderByFechaAsc(
+            Long empleadoId, LocalDate fechaDesde, LocalDate fechaHasta
+    );
 }
