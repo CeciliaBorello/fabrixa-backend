@@ -31,4 +31,10 @@ public interface ProductoRepository extends JpaRepository<Producto, Long> {
 
     @Query("SELECT DISTINCT p.productoBase.id FROM Producto p WHERE p.productoBase.id IN :ids")
     List<Long> findProductoBaseIdsConPresentaciones(@Param("ids") List<Long> ids);
+
+    List<Producto> findByProductoBaseId(Long productoBaseId);
+    long countByProductoBaseId(Long productoBaseId);
+
+    List<Producto> findByProductoBaseIdOrderByPresentacion(Long productoBaseId);
+    long countByProductoBaseIdAndActivo(Long productoBaseId, boolean activo);
 }

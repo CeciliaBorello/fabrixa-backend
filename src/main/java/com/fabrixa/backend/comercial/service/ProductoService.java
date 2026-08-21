@@ -69,12 +69,44 @@ public class ProductoService {
         Producto producto = obtenerOFallar(id);
         producto.setActivo(false);
         repository.save(producto);
+
+        // Cascada: un producto BASE (sin productoBase propio) arrastra a sus
+        // presentaciones -- no puede quedar una presentación activa de un
+        // producto base inactivo. Las presentaciones en sí no tienen hijos,
+        // así que esto no recursiona más de un nivel.
+        if (producto.getProductoBase() == null) {
+            for (Producto presentacion : repository.findByProductoBaseId(id)) {
+                if (presentacion.isActivo()) {
+                    presentacion.setActivo(false);
+                    repository.save(presentacion);
+                }
+            }
+        }
     }
 
     public void reactivar(Long id) {
         Producto producto = obtenerOFallar(id);
         producto.setActivo(true);
         repository.save(producto);
+
+        // Cascada simétrica: reactivar el base reactiva TODAS sus
+        // presentaciones, sin importar si alguna se había desactivado por
+        // separado antes de esta cascada (decisión de alcance ya tomada).
+        if (producto.getProductoBase() == null) {
+            for (Producto presentacion : repository.findByProductoBaseId(id)) {
+                if (!presentacion.isActivo()) {
+                    presentacion.setActivo(true);
+                    repository.save(presentacion);
+                }
+            }
+        }
+    }
+
+    /** Cantidad total de presentaciones (activas + inactivas) de un producto base, para el aviso de cascada. */
+    public long contarPresentaciones(Long id) {
+        Producto producto = obtenerOFallar(id);
+        if (producto.getProductoBase() != null) return 0; // una presentación no tiene presentaciones propias
+        return repository.countByProductoBaseId(id);
     }
 
     public List<Response> listarProductosBase() {
@@ -83,10 +115,18 @@ public class ProductoService {
                 .toList();
     }
 
-    public List<Response> listarPresentaciones(Long productoBaseId) {
-        return repository.findByProductoBaseIdAndActivoTrueOrderByPresentacion(productoBaseId).stream()
-                .map(this::aResponse)
-                .toList();
+    public List<Response> listarPresentaciones(Long productoBaseId, boolean incluirInactivos) {
+        List<Producto> presentaciones = incluirInactivos
+                ? repository.findByProductoBaseIdOrderByPresentacion(productoBaseId)
+                : repository.findByProductoBaseIdAndActivoTrueOrderByPresentacion(productoBaseId);
+        return presentaciones.stream().map(this::aResponse).toList();
+    }
+
+
+    public long contarPresentacionesPorEstado(Long id, boolean activo) {
+        Producto producto = obtenerOFallar(id);
+        if (producto.getProductoBase() != null) return 0;
+        return repository.countByProductoBaseIdAndActivo(id, activo);
     }
 
     private Producto obtenerOFallar(Long id) {
@@ -94,10 +134,6 @@ public class ProductoService {
                 .orElseThrow(() -> new IllegalArgumentException("Producto no encontrado"));
     }
 
-    /**
-     * Si el request trae un productoBaseId, el nombre se arma solo: "<nombre del base> <presentación>".
-     * Si no, se usa el nombre que vino tal cual en el request (producto raíz).
-     */
     private String resolverNombre(Request request) {
         if (request.productoBaseId() == null) {
             if (request.nombre() == null || request.nombre().isBlank()) {

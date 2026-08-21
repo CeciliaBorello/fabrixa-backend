@@ -9,12 +9,23 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 
 import java.util.List;
+import java.util.Set;
 
 @RestController
 @RequestMapping("/api/clientes-proveedores")
 public class ClienteProveedorController {
 
     private final ClienteProveedorService service;
+
+    // Campos reales de la entidad ClienteProveedor por los que sí se puede
+    // ordenar en el backend. "saldo" queda afuera a propósito: el saldo que
+    // se ve en pantalla se calcula en vivo desde Cuentas Corrientes
+    // (comprobantes + ajustes), no vive en esta entidad -- ordenar por
+    // c.saldoCuentaCorriente daría un resultado desactualizado e incorrecto,
+    // no simplemente "raro".
+    private static final Set<String> CAMPOS_ORDENABLES = Set.of(
+            "razonSocial", "cuit", "condicionIva", "fechaModificacion", "tipo", "activo"
+    );
 
     public ClienteProveedorController(ClienteProveedorService service) {
         this.service = service;
@@ -59,7 +70,9 @@ public class ClienteProveedorController {
             @RequestParam(defaultValue = "true") boolean activo,
             @RequestParam(defaultValue = "") String busqueda) {
 
-        Sort sort = Sort.by(Sort.Direction.fromString(sortDir), sortBy);
+        String campoOrden = CAMPOS_ORDENABLES.contains(sortBy) ? sortBy : "fechaModificacion";
+
+        Sort sort = Sort.by(Sort.Direction.fromString(sortDir), campoOrden);
         return service.buscar(activo, busqueda, PageRequest.of(page, size, sort));
     }
 }

@@ -76,7 +76,14 @@ public class ProductoController {
     }
 
     @GetMapping("/{id}/presentaciones")
-    public List<Response> listarPresentaciones(@PathVariable Long id) {
-        return service.listarPresentaciones(id);
+    public List<Response> listarPresentaciones(
+            @PathVariable Long id,
+            @RequestParam(defaultValue = "false") boolean incluirInactivos) {
+        return service.listarPresentaciones(id, incluirInactivos);
+    }
+
+    @GetMapping("/{id}/presentaciones/count")
+    public long contarPresentaciones(@PathVariable Long id, @RequestParam boolean activo) {
+        return service.contarPresentacionesPorEstado(id, activo);
     }
 }

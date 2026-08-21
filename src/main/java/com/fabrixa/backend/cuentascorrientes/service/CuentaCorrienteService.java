@@ -82,7 +82,10 @@ public class CuentaCorrienteService {
             lineas.add(new Linea(a.getFecha(), a.getFechaModificacion(), "Ajuste manual", "AJUSTE", null, a.getMonto(), a.getMotivo()));
         }
 
-        lineas.sort(Comparator.comparing(Linea::ordenPor));
+        // Orden real: por fecha de NEGOCIO primero (fechaEmision/fecha), y
+        // "ordenPor" (timestamp técnico de creación) solo como desempate si dos
+        // movimientos caen el mismo día -- nunca como criterio principal.
+        lineas.sort(Comparator.comparing(Linea::fecha).thenComparing(Linea::ordenPor));
 
         List<MovimientoResponse> resultado = new ArrayList<>();
         BigDecimal acumulado = BigDecimal.ZERO;
