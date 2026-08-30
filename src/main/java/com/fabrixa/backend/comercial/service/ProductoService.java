@@ -36,9 +36,6 @@ public class ProductoService {
         return aResponse(obtenerOFallar(id));
     }
 
-    public Page<Response> buscar(boolean activo, List<TipoProducto> tipos, String busqueda, Pageable pageable) {
-        return repository.buscar(activo, tipos, busqueda, pageable).map(this::aResponse);
-    }
 
     public Response crear(Request request) {
         String nombreFinal = resolverNombre(request);
@@ -102,12 +99,6 @@ public class ProductoService {
         }
     }
 
-    /** Cantidad total de presentaciones (activas + inactivas) de un producto base, para el aviso de cascada. */
-    public long contarPresentaciones(Long id) {
-        Producto producto = obtenerOFallar(id);
-        if (producto.getProductoBase() != null) return 0; // una presentación no tiene presentaciones propias
-        return repository.countByProductoBaseId(id);
-    }
 
     public List<Response> listarProductosBase() {
         return repository.findByProductoBaseIsNullAndActivoTrueOrderByNombre().stream()
@@ -115,19 +106,6 @@ public class ProductoService {
                 .toList();
     }
 
-    public List<Response> listarPresentaciones(Long productoBaseId, boolean incluirInactivos) {
-        List<Producto> presentaciones = incluirInactivos
-                ? repository.findByProductoBaseIdOrderByPresentacion(productoBaseId)
-                : repository.findByProductoBaseIdAndActivoTrueOrderByPresentacion(productoBaseId);
-        return presentaciones.stream().map(this::aResponse).toList();
-    }
-
-
-    public long contarPresentacionesPorEstado(Long id, boolean activo) {
-        Producto producto = obtenerOFallar(id);
-        if (producto.getProductoBase() != null) return 0;
-        return repository.countByProductoBaseIdAndActivo(id, activo);
-    }
 
     private Producto obtenerOFallar(Long id) {
         return repository.findById(id)
@@ -177,5 +155,31 @@ public class ProductoService {
                 p.getProductoBase() != null ? p.getProductoBase().getNombre() : null,
                 p.getPresentacion()
         );
+    }
+
+    public Page<Response> buscar(boolean activo, List<TipoProducto> tipos, String busqueda, Pageable pageable) {
+        if (activo) {
+            return repository.buscar(true, tipos, busqueda, pageable).map(this::aResponse);
+        }
+        return repository.buscarInactivos(tipos, busqueda, pageable).map(this::aResponse);
+    }
+
+    /**
+     * mostrarInactivos = false -> solo presentaciones activas (vista "activos").
+     * mostrarInactivos = true  -> solo presentaciones inactivas (vista "inactivos"),
+     * consistente con que en esa vista el producto base puede seguir activo pero
+     * tener presentaciones inactivas colgando -- ahí es donde interesa verlas.
+     */
+    public List<Response> listarPresentaciones(Long productoBaseId, boolean mostrarInactivos) {
+        List<Producto> presentaciones = mostrarInactivos
+                ? repository.findByProductoBaseIdAndActivoFalseOrderByPresentacion(productoBaseId)
+                : repository.findByProductoBaseIdAndActivoTrueOrderByPresentacion(productoBaseId);
+        return presentaciones.stream().map(this::aResponse).toList();
+    }
+
+    public long contarPresentacionesPorEstado(Long id, boolean activo) {
+        Producto producto = obtenerOFallar(id);
+        if (producto.getProductoBase() != null) return 0;
+        return repository.countByProductoBaseIdAndActivo(id, activo);
     }
 }

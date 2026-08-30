@@ -51,6 +51,16 @@ public class ProductoController {
         service.reactivar(id);
     }
 
+    @GetMapping("/base")
+    public List<Response> listarProductosBase() {
+        return service.listarProductosBase();
+    }
+
+    @GetMapping("/{id}/presentaciones/count")
+    public long contarPresentaciones(@PathVariable Long id, @RequestParam boolean activo) {
+        return service.contarPresentacionesPorEstado(id, activo);
+    }
+
     @GetMapping("/pagina")
     public Page<Response> listarPaginado(
             @RequestParam(defaultValue = "0") int page,
@@ -70,20 +80,10 @@ public class ProductoController {
         return service.buscar(activo, tipos, busqueda, PageRequest.of(page, size, sort));
     }
 
-    @GetMapping("/base")
-    public List<Response> listarProductosBase() {
-        return service.listarProductosBase();
-    }
-
     @GetMapping("/{id}/presentaciones")
     public List<Response> listarPresentaciones(
             @PathVariable Long id,
-            @RequestParam(defaultValue = "false") boolean incluirInactivos) {
-        return service.listarPresentaciones(id, incluirInactivos);
-    }
-
-    @GetMapping("/{id}/presentaciones/count")
-    public long contarPresentaciones(@PathVariable Long id, @RequestParam boolean activo) {
-        return service.contarPresentacionesPorEstado(id, activo);
+            @RequestParam(defaultValue = "false") boolean mostrarInactivos) {
+        return service.listarPresentaciones(id, mostrarInactivos);
     }
 }
