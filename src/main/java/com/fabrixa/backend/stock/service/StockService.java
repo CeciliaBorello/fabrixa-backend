@@ -18,6 +18,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -67,7 +68,8 @@ public class StockService {
         if (nuevaCantidad.compareTo(BigDecimal.ZERO) < 0) {
             throw new IllegalArgumentException(
                     "Stock insuficiente de " + producto.getNombre() +
-                            " (disponible: " + stockActual.getCantidad() + ", se intentó descontar: " + cantidad.abs() + ")");
+                            " (disponible: " + stockActual.getCantidad().setScale(2, RoundingMode.HALF_UP) +
+                            ", se intentó descontar: " + cantidad.abs().setScale(2, RoundingMode.HALF_UP) + ")");
         }
 
         stockActual.setCantidad(nuevaCantidad);

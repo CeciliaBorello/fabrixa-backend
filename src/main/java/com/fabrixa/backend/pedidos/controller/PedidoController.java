@@ -60,7 +60,8 @@ public class PedidoController {
             @RequestParam(defaultValue = "false") boolean soloCancelados,
             @RequestParam(defaultValue = "") String busqueda) {
 
-        Sort sort = Sort.by(Sort.Direction.fromString(sortDir), sortBy);
+        Sort.Order orden = new Sort.Order(Sort.Direction.fromString(sortDir), sortBy).nullsLast();
+        Sort sort = Sort.by(orden);
         return service.buscar(soloCancelados, busqueda, PageRequest.of(page, size, sort));
     }
 }
