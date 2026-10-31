@@ -26,7 +26,7 @@ public interface ComprobanteRepository extends JpaRepository<Comprobante, Long> 
     List<Comprobante> findByComprobanteAfectadoIdAndEstado(Long comprobanteAfectadoId, com.fabrixa.backend.facturacion.model.EstadoComprobante estado);
 
     @Query("SELECT c FROM Comprobante c WHERE c.clienteProveedor.id = :clienteId AND c.direccion = :direccion " +
-            "AND c.estado = 'EMITIDO' AND c.tipo IN ('FACTURA_A', 'FACTURA_B_REMITO', 'FACTURA_COMPRA') AND " +
+            "AND c.estado = 'EMITIDO' AND c.tipo IN ('FACTURA_A', 'FACTURA_B_REMITO', 'FACTURA_C_REMITO', 'FACTURA_COMPRA') AND " +
             "((:direccion = 'VENTA' AND c.estadoCobro <> 'COBRADO') OR (:direccion = 'COMPRA' AND c.estadoPago <> 'PAGADO')) " +
             "ORDER BY c.fechaEmision")
     List<Comprobante> findPendientesPorCliente(@Param("clienteId") Long clienteId, @Param("direccion") DireccionComprobante direccion);

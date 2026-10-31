@@ -15,6 +15,8 @@ import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import com.fabrixa.backend.comercial.model.TipoClienteProveedor;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -53,9 +55,21 @@ public class PedidoService {
         return pedidoRepository.buscar(soloCancelados, busqueda, pageable).map(this::aResponse);
     }
 
+    @Transactional
     public Response crear(Request request, Authentication auth) {
+        if (request.clienteId() == null) {
+            throw new IllegalArgumentException("Seleccioná un cliente");
+        }
+
         ClienteProveedor cliente = clienteRepository.findById(request.clienteId())
                 .orElseThrow(() -> new IllegalArgumentException("Cliente no encontrado"));
+
+        if (!cliente.isActivo()) {
+            throw new IllegalArgumentException("El cliente " + cliente.getRazonSocial() + " está inactivo");
+        }
+        if (cliente.getTipo() == TipoClienteProveedor.PROVEEDOR) {
+            throw new IllegalArgumentException(cliente.getRazonSocial() + " está cargado solo como proveedor");
+        }
 
         Usuario usuario = usuarioRepository.findByEmail(auth.getName())
                 .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado"));
@@ -71,8 +85,19 @@ public class PedidoService {
         pedido.setFechaPedido(LocalDateTime.now());
 
         for (ItemRequest itemReq : request.items()) {
+            if (itemReq.productoId() == null) {
+                throw new IllegalArgumentException("Hay un ítem sin producto");
+            }
+            if (itemReq.cantidad() == null || itemReq.cantidad() <= 0) {
+                throw new IllegalArgumentException("La cantidad de cada ítem debe ser mayor a cero");
+            }
+
             Producto producto = productoRepository.findById(itemReq.productoId())
                     .orElseThrow(() -> new IllegalArgumentException("Producto no encontrado: " + itemReq.productoId()));
+
+            if (!producto.isActivo()) {
+                throw new IllegalArgumentException("El producto " + producto.getNombre() + " está inactivo");
+            }
 
             ItemPedido item = new ItemPedido();
             item.setPedido(pedido);

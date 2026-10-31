@@ -8,6 +8,7 @@ import com.fabrixa.backend.comercial.repository.ProductoRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -62,6 +63,7 @@ public class ProductoService {
         return aResponse(repository.save(producto));
     }
 
+    @Transactional
     public void desactivar(Long id) {
         Producto producto = obtenerOFallar(id);
         producto.setActivo(false);
@@ -81,6 +83,7 @@ public class ProductoService {
         }
     }
 
+    @Transactional
     public void reactivar(Long id) {
         Producto producto = obtenerOFallar(id);
         producto.setActivo(true);
