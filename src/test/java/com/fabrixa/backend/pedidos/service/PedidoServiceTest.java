@@ -1,13 +1,14 @@
 package com.fabrixa.backend.pedidos.service;
 
+import com.fabrixa.backend.pedidos.dto.PedidoDTO.ItemRequest;
+import com.fabrixa.backend.pedidos.dto.PedidoDTO.Request;
+import com.fabrixa.backend.pedidos.dto.PedidoDTO.Response;
+
 import com.fabrixa.backend.comercial.model.ClienteProveedor;
 import com.fabrixa.backend.comercial.model.Producto;
 import com.fabrixa.backend.comercial.model.TipoClienteProveedor;
 import com.fabrixa.backend.comercial.repository.ClienteProveedorRepository;
 import com.fabrixa.backend.comercial.repository.ProductoRepository;
-import com.fabrixa.backend.pedidos.dto.PedidoDTO.ItemRequest;
-import com.fabrixa.backend.pedidos.dto.PedidoDTO.Request;
-import com.fabrixa.backend.pedidos.dto.PedidoDTO.Response;
 import com.fabrixa.backend.pedidos.model.EstadoPedido;
 import com.fabrixa.backend.pedidos.model.Pedido;
 import com.fabrixa.backend.pedidos.repository.PedidoRepository;
@@ -28,6 +29,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.core.Authentication;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 
@@ -119,14 +121,14 @@ class PedidoServiceTest {
         @Test
         @DisplayName("Sin cliente → error")
         void sinCliente() {
-            assertError(new Request(null, List.of(new ItemRequest(1L, 5))), "Seleccioná un cliente");
+            assertError(new Request(null, List.of(new ItemRequest(1L, new BigDecimal("5")))), "Seleccioná un cliente");
         }
 
         @Test
         @DisplayName("Cliente inexistente → error")
         void clienteInexistente() {
             when(clienteRepository.findById(99L)).thenReturn(Optional.empty());
-            assertError(new Request(99L, List.of(new ItemRequest(1L, 5))), "Cliente no encontrado");
+            assertError(new Request(99L, List.of(new ItemRequest(1L, new BigDecimal("5")))), "Cliente no encontrado");
         }
 
         @Test
@@ -134,7 +136,7 @@ class PedidoServiceTest {
         void clienteInactivo() {
             ClienteProveedor c = cliente(10L, TipoClienteProveedor.CLIENTE, false);
             when(clienteRepository.findById(10L)).thenReturn(Optional.of(c));
-            assertError(new Request(10L, List.of(new ItemRequest(1L, 5))),
+            assertError(new Request(10L, List.of(new ItemRequest(1L, new BigDecimal("5")))),
                     "El cliente Distribuidora Norte está inactivo");
         }
 
@@ -143,7 +145,7 @@ class PedidoServiceTest {
         void soloProveedor() {
             ClienteProveedor c = cliente(10L, TipoClienteProveedor.PROVEEDOR, true);
             when(clienteRepository.findById(10L)).thenReturn(Optional.of(c));
-            assertError(new Request(10L, List.of(new ItemRequest(1L, 5))),
+            assertError(new Request(10L, List.of(new ItemRequest(1L, new BigDecimal("5")))),
                     "Distribuidora Norte está cargado solo como proveedor");
         }
 
@@ -159,17 +161,40 @@ class PedidoServiceTest {
         @DisplayName("Ítem sin producto → error")
         void itemSinProducto() {
             prepararClienteYUsuario(cliente(10L, TipoClienteProveedor.CLIENTE, true));
-            assertError(new Request(10L, List.of(new ItemRequest(null, 5))), "Hay un ítem sin producto");
+            assertError(new Request(10L, List.of(new ItemRequest(null, new BigDecimal("5")))), "Hay un ítem sin producto");
         }
 
         @ParameterizedTest(name = "cantidad = {0}")
         @NullSource
-        @ValueSource(ints = {0, -3})
+        @ValueSource(strings = {"0", "-3", "-0.5"})
         @DisplayName("Cantidad nula, cero o negativa → error")
-        void cantidadInvalida(Integer cantidad) {
+        void cantidadInvalida(BigDecimal cantidad) {
             prepararClienteYUsuario(cliente(10L, TipoClienteProveedor.CLIENTE, true));
             assertError(new Request(10L, List.of(new ItemRequest(1L, cantidad))),
                     "La cantidad de cada ítem debe ser mayor a cero");
+        }
+
+        @ParameterizedTest(name = "cantidad = {0}")
+        @ValueSource(strings = {"1.2345", "0.0001"})
+        @DisplayName("Cantidad con más de 3 decimales → error")
+        void cantidadConDemasiadosDecimales(BigDecimal cantidad) {
+            prepararClienteYUsuario(cliente(10L, TipoClienteProveedor.CLIENTE, true));
+            assertError(new Request(10L, List.of(new ItemRequest(1L, cantidad))),
+                    "La cantidad admite hasta 3 decimales");
+        }
+
+        @ParameterizedTest(name = "cantidad = {0}")
+        @ValueSource(strings = {"2.5", "0.125", "1.500", "0.001"})
+        @DisplayName("Cantidad decimal de hasta 3 decimales → se acepta tal cual")
+        void cantidadDecimalValida(BigDecimal cantidad) {
+            prepararClienteYUsuario(cliente(10L, TipoClienteProveedor.CLIENTE, true));
+            when(productoRepository.findById(1L)).thenReturn(Optional.of(producto(1L, "Queso cremoso", true)));
+            saveDevuelveLoMismo();
+
+            Response r = pedidoService.crear(new Request(10L, List.of(new ItemRequest(1L, cantidad))), auth);
+
+            assertThat(r.items()).singleElement()
+                    .satisfies(i -> assertThat(i.cantidad()).isEqualByComparingTo(cantidad));
         }
 
         @Test
@@ -177,7 +202,7 @@ class PedidoServiceTest {
         void productoInexistente() {
             prepararClienteYUsuario(cliente(10L, TipoClienteProveedor.CLIENTE, true));
             when(productoRepository.findById(99L)).thenReturn(Optional.empty());
-            assertError(new Request(10L, List.of(new ItemRequest(99L, 5))), "Producto no encontrado: 99");
+            assertError(new Request(10L, List.of(new ItemRequest(99L, new BigDecimal("5")))), "Producto no encontrado: 99");
         }
 
         @Test
@@ -185,7 +210,7 @@ class PedidoServiceTest {
         void productoInactivo() {
             prepararClienteYUsuario(cliente(10L, TipoClienteProveedor.CLIENTE, true));
             when(productoRepository.findById(1L)).thenReturn(Optional.of(producto(1L, "Dulce de leche 1kg", false)));
-            assertError(new Request(10L, List.of(new ItemRequest(1L, 5))),
+            assertError(new Request(10L, List.of(new ItemRequest(1L, new BigDecimal("5")))),
                     "El producto Dulce de leche 1kg está inactivo");
         }
 
@@ -194,7 +219,7 @@ class PedidoServiceTest {
         void segundoItemInvalidoNoGuarda() {
             prepararClienteYUsuario(cliente(10L, TipoClienteProveedor.CLIENTE, true));
             when(productoRepository.findById(1L)).thenReturn(Optional.of(producto(1L, "Dulce de leche 1kg", true)));
-            assertError(new Request(10L, List.of(new ItemRequest(1L, 5), new ItemRequest(2L, 0))),
+            assertError(new Request(10L, List.of(new ItemRequest(1L, new BigDecimal("5")), new ItemRequest(2L, new BigDecimal("0")))),
                     "La cantidad de cada ítem debe ser mayor a cero");
         }
 
@@ -207,7 +232,7 @@ class PedidoServiceTest {
             saveDevuelveLoMismo();
 
             Response r = pedidoService.crear(
-                    new Request(10L, List.of(new ItemRequest(1L, 5), new ItemRequest(2L, 12))), auth);
+                    new Request(10L, List.of(new ItemRequest(1L, new BigDecimal("5")), new ItemRequest(2L, new BigDecimal("12")))), auth);
 
             assertThat(r.estado()).isEqualTo(EstadoPedido.NUEVO);
             assertThat(r.clienteNombre()).isEqualTo("Distribuidora Norte");
@@ -215,7 +240,7 @@ class PedidoServiceTest {
             assertThat(r.fechaPedido()).isNotNull();
             assertThat(r.fechaEntrega()).isNull();
             assertThat(r.items()).hasSize(2);
-            assertThat(r.items()).extracting(i -> i.cantidad()).containsExactly(5, 12);
+            assertThat(r.items()).extracting(i -> i.cantidad()).containsExactly(new BigDecimal("5"), new BigDecimal("12"));
 
             // Los ítems quedan vinculados al pedido (necesario para el cascade)
             ArgumentCaptor<Pedido> captor = ArgumentCaptor.forClass(Pedido.class);
@@ -232,7 +257,7 @@ class PedidoServiceTest {
             when(productoRepository.findById(1L)).thenReturn(Optional.of(producto(1L, "Dulce de leche 1kg", true)));
             saveDevuelveLoMismo();
 
-            Response r = pedidoService.crear(new Request(10L, List.of(new ItemRequest(1L, 1))), auth);
+            Response r = pedidoService.crear(new Request(10L, List.of(new ItemRequest(1L, new BigDecimal("1")))), auth);
 
             assertThat(r.estado()).isEqualTo(EstadoPedido.NUEVO);
         }

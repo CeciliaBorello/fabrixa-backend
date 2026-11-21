@@ -1,12 +1,13 @@
 package com.fabrixa.backend.pedidos.service;
 
+import com.fabrixa.backend.pedidos.dto.PedidoDTO.*;
+import com.fabrixa.backend.pedidos.model.ItemPedido;
+
 import com.fabrixa.backend.comercial.model.ClienteProveedor;
 import com.fabrixa.backend.comercial.model.Producto;
 import com.fabrixa.backend.comercial.repository.ClienteProveedorRepository;
 import com.fabrixa.backend.comercial.repository.ProductoRepository;
-import com.fabrixa.backend.pedidos.dto.PedidoDTO.*;
 import com.fabrixa.backend.pedidos.model.EstadoPedido;
-import com.fabrixa.backend.pedidos.model.ItemPedido;
 import com.fabrixa.backend.pedidos.model.Pedido;
 import com.fabrixa.backend.pedidos.repository.PedidoRepository;
 import com.fabrixa.backend.usuarios.model.Usuario;
@@ -23,6 +24,9 @@ import java.util.List;
 
 @Service
 public class PedidoService {
+
+    /** Debe coincidir con la escala de items_pedido.cantidad (numeric(12,3)). */
+    private static final int MAX_DECIMALES_CANTIDAD = 3;
 
     private final PedidoRepository pedidoRepository;
     private final ClienteProveedorRepository clienteRepository;
@@ -88,8 +92,11 @@ public class PedidoService {
             if (itemReq.productoId() == null) {
                 throw new IllegalArgumentException("Hay un ítem sin producto");
             }
-            if (itemReq.cantidad() == null || itemReq.cantidad() <= 0) {
+            if (itemReq.cantidad() == null || itemReq.cantidad().signum() <= 0) {
                 throw new IllegalArgumentException("La cantidad de cada ítem debe ser mayor a cero");
+            }
+            if (itemReq.cantidad().stripTrailingZeros().scale() > MAX_DECIMALES_CANTIDAD) {
+                throw new IllegalArgumentException("La cantidad admite hasta " + MAX_DECIMALES_CANTIDAD + " decimales");
             }
 
             Producto producto = productoRepository.findById(itemReq.productoId())

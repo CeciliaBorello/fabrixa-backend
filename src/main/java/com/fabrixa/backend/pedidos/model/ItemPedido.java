@@ -5,6 +5,8 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.math.BigDecimal;
+
 @Entity
 @Table(name = "items_pedido")
 @Getter
@@ -23,6 +25,7 @@ public class ItemPedido {
     @JoinColumn(name = "producto_id", nullable = false)
     private Producto producto;
 
-    @Column(nullable = false)
-    private Integer cantidad;
+    // Admite decimales (p. ej. 2,5 kg). Hasta 3 decimales: ver V2__cantidad_pedido_decimal.sql
+    @Column(nullable = false, precision = 12, scale = 3)
+    private BigDecimal cantidad;
 }
